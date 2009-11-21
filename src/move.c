@@ -10,20 +10,18 @@
 
 void move_to_string(move_t *move, char *out)
 {
-    int from_square = ffsll(move->from_square) - 1,
-        to_square = ffsll(move->to_square) - 1,
-        i = 0;
+    int i = 0;
 
     char buf[2];
 
-    util_square_to_chars(from_square, buf);
+    util_square_to_chars(move->from_square_idx, buf);
 
     out[i++] = buf[0];
     out[i++] = buf[1];
 
     out[i++] = (move->capture >= 0) ? 'x' : ' ';
 
-    util_square_to_chars(to_square, buf);
+    util_square_to_chars(move->to_square_idx, buf);
 
     out[i++] = buf[0];
     out[i++] = buf[1];
@@ -45,12 +43,14 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
         while (bits)
         {
             uint64_t from_square = bits & -bits;
+            int from_square_idx = ffsll(from_square) - 1;
             bits &= bits - 1;
 
-            uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from_square);
+            uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from_square_idx);
             while (valid_moves)
             {
                 uint64_t to_square = valid_moves & -valid_moves;
+                int to_square_idx = ffsll(to_square) - 1;
                 valid_moves &= valid_moves - 1;
                 
                 /* Check if it's a capture. If so, set "capture" to the captured piece. */
@@ -74,7 +74,6 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 }
 
                 /* En passant is a capture as well. */
-                /* TODO: else if */
                 if (piece == PAWN && to_square & state->en_passant)
                 {
                     capture = PAWN;
@@ -88,6 +87,8 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                     {
                         moves[*count].from_square = from_square;
                         moves[*count].to_square = to_square;
+                        moves[*count].from_square_idx = from_square_idx;
+                        moves[*count].to_square_idx = to_square_idx;
                         moves[*count].from_piece = piece;
                         moves[*count].capture = capture;
                         moves[*count].promotion = promotion;
@@ -100,6 +101,8 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                     /* If it's not a promotion, we'll just generate one move. */
                     moves[*count].from_square = from_square;
                     moves[*count].to_square = to_square;
+                    moves[*count].from_square_idx = from_square_idx;
+                    moves[*count].to_square_idx = to_square_idx;
                     moves[*count].from_piece = piece;
                     moves[*count].capture = capture;
                     moves[*count].promotion = -1;
@@ -111,13 +114,12 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
     }
 }
 
-uint64_t move_piece_moves(state_t *state, int color, int piece, uint64_t from_square)
+uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
 {
     /* Returns a 64bit int containing the valid moves/captures of one specific piece in a position
      * The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere. */
     uint64_t valid_moves = 0;
-    int opponent = 1 - color,
-        from_idx = ffsll(from_square) - 1;
+    int opponent = 1 - color;
 
     if (piece == PAWN)
     {
@@ -147,15 +149,15 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, uint64_t from_sq
         valid_moves = cached->moves_king[from_idx] & ~state->occupied[color];
 
         /* We need to first check if the path is free and that castling is available in that direction.
-         * Then we need to see if the king or any of the "stepping" squares
-         * (F1 and G1 for white king side castle, for instance) are being attacked. */
+         * Then we need to see if the king or any of the "stepping" squares (F1 and G1 for white king side castle,
+         * for instance) are being attacked. */
 
         uint64_t left_castle = cached->castling_availability[color][0][from_idx];
         if (left_castle & state->castling)
         {
             uint64_t steps = cached->castling_steps[color][0];
             uint64_t move_steps = steps | left_castle << 1;
-            if ((0 == (move_steps & state->occupied_both)) && !move_is_attacked(state, steps | from_square, opponent))
+            if ((0 == (move_steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
             {
                 valid_moves |= left_castle << 2;
             }
@@ -165,7 +167,7 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, uint64_t from_sq
         if (right_castle & state->castling)
         {
             uint64_t steps = cached->castling_steps[color][1];
-            if ((0 == (steps & state->occupied_both)) && !move_is_attacked(state, steps | from_square, opponent))
+            if ((0 == (steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
             {
                 valid_moves |= right_castle >> 1;
             }
@@ -204,7 +206,7 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, uint64_t from_sq
             sw_moves &= cached->directions[SW][from_idx];
             sw_moves ^= cached->directions[SW][from_idx];
 
-            valid_moves |= (nw_moves | ne_moves | se_moves | sw_moves) & ~state->occupied[color];
+            valid_moves = (nw_moves | ne_moves | se_moves | sw_moves) & ~state->occupied[color];
         }
 
         if (piece == ROOK || piece == QUEEN)
@@ -280,11 +282,11 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
 
         /* Pretend to generate moves from the defenders POV, and see if the valid moves fits with
          * a black bishop, rook or queen on the board. */
-        else if ((state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, BISHOP, square))
+        else if ((state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, BISHOP, square_idx))
         {
             return 1;
         }
-        else if ((state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, ROOK, square))
+        else if ((state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, ROOK, square_idx))
         {
             return 1;
         }
@@ -295,9 +297,6 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
 
 void move_make_move(state_t* state, move_t* move)
 {
-    int to_square_idx = ffsll(move->to_square) - 1,
-        from_square_idx = ffsll(move->from_square) - 1;
-
     /* Save some data for unmake_move */
     move->castling = state->castling;
     move->en_passant = state->en_passant;
@@ -322,7 +321,7 @@ void move_make_move(state_t* state, move_t* move)
         {
             /* The piece captured with en passant; we need to clear the board of the captured piece.
                 * We simply use the pawn move square of the opponent to find out which square to clear. */
-            to_remove_square = cached->moves_pawn_one[opponent][to_square_idx];
+            to_remove_square = cached->moves_pawn_one[opponent][move->to_square_idx];
         }
 
         /* Remove the captured piece off the board. */
@@ -348,18 +347,18 @@ void move_make_move(state_t* state, move_t* move)
     if (move->from_piece == KING)
     {
         /* TODO: This can be made more efficient by caching more stuff..
-            * We could first see if the move was >1 step (one bitwise and and one lookup),
-            * then we could have a cache element where cached[to_square] gives the place where
-            * the rook should be positioned (one bitwise xor and one lookup). */
+         * We could first see if the move was >1 step (one bitwise and and one lookup),
+         * then we could have a cache element where cached[to_square] gives the place where
+         * the rook should be positioned (one bitwise xor and one lookup). */
 
-        uint64_t left_castle = cached->castling_availability[state->turn][0][from_square_idx];
+        uint64_t left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
         if ((left_castle << 2) & move->to_square)
         {
             state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
             state->occupied[state->turn] ^= left_castle | left_castle << 3;
         }
 
-        uint64_t right_castle = cached->castling_availability[state->turn][1][from_square_idx];
+        uint64_t right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
         if ((right_castle >> 1) & move->to_square)
         {
             state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
@@ -378,9 +377,9 @@ void move_make_move(state_t* state, move_t* move)
     else if (move->from_piece == PAWN)
     {
         /* Clear / set en_passant. */
-        if (~cached->moves_pawn_one[state->turn][from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][from_square_idx])
+        if (~cached->moves_pawn_one[state->turn][move->from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][move->from_square_idx])
         {
-            state->en_passant = cached->moves_pawn_one[state->turn][from_square_idx];
+            state->en_passant = cached->moves_pawn_one[state->turn][move->from_square_idx];
         }
     }
     

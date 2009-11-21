@@ -12,13 +12,15 @@ int main()
     cache_init();
     util_init();
 
+    /*
     state_t state;
-    state_init_from_fen(&state, FEN_INIT);
+    state_init_from_fen(&state, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R b KQkq a3 0 1");
 
     state_print(&state);
-    test_divide(&state, 7);
+    test_divide(&state, 1);
+    */
 
-    //test_perftsuite(6);
+    test_perftsuite(4);
 
     cache_destroy();
 

@@ -140,6 +140,8 @@ void cache_init()
                     y2 += ydir;
                     x2 += xdir;
                 }
+
+                cached->moves_bishop[idx] |= cached->directions[dir][idx];
             }
 
             int rook_arr[4][3] = {
@@ -162,6 +164,8 @@ void cache_init()
                     y2 += ydir;
                     x2 += xdir;
                 }
+
+                cached->moves_rook[idx] |= cached->directions[dir][idx];
             }
 
             int king_arr[8][2] = {

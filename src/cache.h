@@ -23,6 +23,10 @@ typedef struct
     /* Bishop, Rooks and Queen moves can be combined from rays going in every direction. */
             directions[8][64],
 
+    /* We use "directions" to calculate these as well */
+            moves_bishop[64],
+            moves_rook[64],
+
     /* Used to efficiently find out if castling is available */
             castling_availability[2][2][64],
 

@@ -178,68 +178,48 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
         /* TODO: Needs more rotated or magic or something bitboards! */
         if (piece == BISHOP || piece == QUEEN)
         {
-            uint64_t nw_moves = cached->directions[NW][from_idx] & state->occupied_both;
-            nw_moves = (nw_moves << 7) | (nw_moves << 14)
-                        | (nw_moves << 21) | (nw_moves << 28)
-                        | (nw_moves << 35) | (nw_moves << 42);
-            nw_moves &= cached->directions[NW][from_idx];
-            nw_moves ^= cached->directions[NW][from_idx];
+            valid_moves |= cached->moves_bishop[from_idx];
 
-            uint64_t ne_moves = cached->directions[NE][from_idx] & state->occupied_both;
-            ne_moves = (ne_moves << 9) | (ne_moves << 18)
-                        | (ne_moves << 27) | (ne_moves << 36)
-                        | (ne_moves << 45) | (ne_moves << 54);
-            ne_moves &= cached->directions[NE][from_idx];
-            ne_moves ^= cached->directions[NE][from_idx];
+            uint64_t nw_hits = cached->directions[NW][from_idx] & state->occupied_both;
+            if (nw_hits)
+                valid_moves &= ~cached->directions[NW][__builtin_ctzll(nw_hits)];
 
-            uint64_t se_moves = cached->directions[SE][from_idx] & state->occupied_both;
-            se_moves = (se_moves >> 7) | (se_moves >> 14)
-                        | (se_moves >> 21) | (se_moves >> 28)
-                        | (se_moves >> 35) | (se_moves >> 42);
-            se_moves &= cached->directions[SE][from_idx];
-            se_moves ^= cached->directions[SE][from_idx];
+            uint64_t ne_hits = cached->directions[NE][from_idx] & state->occupied_both;
+            if (ne_hits)
+                valid_moves &= ~cached->directions[NE][__builtin_ctzll(ne_hits)];
 
-            uint64_t sw_moves = cached->directions[SW][from_idx] & state->occupied_both;
-            sw_moves = (sw_moves >> 9) | (sw_moves >> 18)
-                        | (sw_moves >> 27) | (sw_moves >> 36)
-                        | (sw_moves >> 45) | (sw_moves >> 54);
-            sw_moves &= cached->directions[SW][from_idx];
-            sw_moves ^= cached->directions[SW][from_idx];
+            uint64_t se_hits = cached->directions[SE][from_idx] & state->occupied_both;
+            if (se_hits)
+                valid_moves &= ~cached->directions[SE][63 - __builtin_clzll(se_hits)];
 
-            valid_moves = (nw_moves | ne_moves | se_moves | sw_moves) & ~state->occupied[color];
+            uint64_t sw_hits = cached->directions[SW][from_idx] & state->occupied_both;
+            if (sw_hits)
+                valid_moves &= ~cached->directions[SW][63 - __builtin_clzll(sw_hits)];
+
+            valid_moves &= ~state->occupied[color];
         }
 
         if (piece == ROOK || piece == QUEEN)
         {
-            uint64_t right_moves = cached->directions[EAST][from_idx] & state->occupied_both;
-            right_moves = (right_moves << 1) | (right_moves << 2)
-                        | (right_moves << 3) | (right_moves << 4)
-                        | (right_moves << 5) | (right_moves << 6);
-            right_moves &= cached->directions[EAST][from_idx];
-            right_moves ^= cached->directions[EAST][from_idx];
+            valid_moves |= cached->moves_rook[from_idx];
 
-            uint64_t left_moves = cached->directions[WEST][from_idx] & state->occupied_both;
-            left_moves = (left_moves >> 1) | (left_moves >> 2)
-                        | (left_moves >> 3) | (left_moves >> 4)
-                        | (left_moves >> 5) | (left_moves >> 6);
-            left_moves &= cached->directions[WEST][from_idx];
-            left_moves ^= cached->directions[WEST][from_idx];
+            uint64_t north_hits = cached->directions[NORTH][from_idx] & state->occupied_both;
+            if (north_hits)
+                valid_moves &= ~cached->directions[NORTH][__builtin_ctzll(north_hits)];
 
-            uint64_t up_moves = cached->directions[NORTH][from_idx] & state->occupied_both;
-            up_moves = (up_moves << 8) | (up_moves << 16)
-                        | (up_moves << 24) | (up_moves << 32)
-                        | (up_moves << 40) | (up_moves << 48);
-            up_moves &= cached->directions[NORTH][from_idx];
-            up_moves ^= cached->directions[NORTH][from_idx];
+            uint64_t east_hits = cached->directions[EAST][from_idx] & state->occupied_both;
+            if (east_hits)
+                valid_moves &= ~cached->directions[EAST][__builtin_ctzll(east_hits)];
 
-            uint64_t down_moves = cached->directions[SOUTH][from_idx] & state->occupied_both;
-            down_moves = (down_moves >> 8) | (down_moves >> 16)
-                        | (down_moves >> 24) | (down_moves >> 32)
-                        | (down_moves >> 40) | (down_moves >> 48);
-            down_moves &= cached->directions[SOUTH][from_idx];
-            down_moves ^= cached->directions[SOUTH][from_idx];
+            uint64_t south_hits = cached->directions[SOUTH][from_idx] & state->occupied_both;
+            if (south_hits)
+                valid_moves &= ~cached->directions[SOUTH][63 - __builtin_clzll(south_hits)];
 
-            valid_moves |= (right_moves | left_moves | up_moves | down_moves) & ~state->occupied[color];
+            uint64_t west_hits = cached->directions[WEST][from_idx] & state->occupied_both;
+            if (west_hits)
+                valid_moves &= ~cached->directions[WEST][63 - __builtin_clzll(west_hits)];
+
+            valid_moves &= ~state->occupied[color];
         }
     }
 
@@ -278,7 +258,10 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
          * Then we take the first bit relative to the position - that is the least significant bit
          * in the following directions: NW N NE E, and the most significant bit in the other directions -
          * and see if it's currently being occupied by a queen or rook/bishop */
+
+        /* BISHOP */
         uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];
+
         uint64_t nw_hits = state->occupied_both & cached->directions[NW][square_idx];
         if ((nw_hits & -nw_hits) & bishop_and_queen)
         {
@@ -303,6 +286,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
             return 1;
         }
 
+        /* ROOK */
         uint64_t rook_and_queen = state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN];
 
         uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square_idx];

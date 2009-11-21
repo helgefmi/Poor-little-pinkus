@@ -250,7 +250,6 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
 int move_is_attacked(state_t *state, uint64_t squares, int attacker)
 {
     /* Checks if a set of squares are currently attacked by an attackers pieces */
-    int defender = 1 - attacker;
 
     while (squares)
     {
@@ -273,20 +272,59 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         {
             return 1;
         }
-        /* TODO:
-         * This can be much faster if we check every direction (4 for bishop, 4 for rooks),
-         * and see if the direction from that square hits bishop_and_queen / rook_and_queen.
-         * We need to alternate between using the highest and the lowest bit to bitwise and
-         * both rook and bishop moves.
-         * http://www.talkchess.com/forum/viewtopic.php?t=30356 */
 
-        /* Pretend to generate moves from the defenders POV, and see if the valid moves fits with
-         * a black bishop, rook or queen on the board. */
-        else if ((state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, BISHOP, square_idx))
+        /* Ugly and FAST code incoming :-)
+         * We check each 8 directions from the square index, and find out the intersects with occupied_all.
+         * Then we take the first bit relative to the position - that is the least significant bit
+         * in the following directions: NW N NE E, and the most significant bit in the other directions -
+         * and see if it's currently being occupied by a queen or rook/bishop */
+        uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];
+        uint64_t nw_hits = state->occupied_both & cached->directions[NW][square_idx];
+        if ((nw_hits & -nw_hits) & bishop_and_queen)
         {
             return 1;
         }
-        else if ((state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN]) & move_piece_moves(state, defender, ROOK, square_idx))
+
+        uint64_t ne_hits = state->occupied_both & cached->directions[NE][square_idx];
+        if ((ne_hits & -ne_hits) & bishop_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t sw_hits = state->occupied_both & cached->directions[SW][square_idx];
+        if (sw_hits && (1ull << (63 - __builtin_clzll(sw_hits))) & bishop_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t se_hits = state->occupied_both & cached->directions[SE][square_idx];
+        if (se_hits && (1ull << (63 - __builtin_clzll(se_hits))) & bishop_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t rook_and_queen = state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN];
+
+        uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square_idx];
+        if ((north_hits & -north_hits) & rook_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t east_hits = state->occupied_both & cached->directions[EAST][square_idx];
+        if ((east_hits & -east_hits) & rook_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square_idx];
+        if (south_hits && (1ull << (63 - __builtin_clzll(south_hits))) & rook_and_queen)
+        {
+            return 1;
+        }
+
+        uint64_t west_hits = state->occupied_both & cached->directions[WEST][square_idx];
+        if (west_hits && (1ull << (63 - __builtin_clzll(west_hits))) & rook_and_queen)
         {
             return 1;
         }

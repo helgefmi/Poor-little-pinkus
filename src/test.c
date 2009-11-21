@@ -37,12 +37,9 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
 
     while (count--)
     {
-        state_t duplicate;
-        memcpy(&duplicate, state, sizeof(state_t));
+        move_make(state,  &moves[count]);
 
-        move_make_move(&duplicate,  &moves[count]);
-        uint64_t res = test_perft(&duplicate, depth - 1, 0);
-
+        uint64_t res = test_perft(state, depth - 1, 0);
         if (verbose && res > 0)
         {
             move_to_string(&moves[count], move_str);
@@ -50,7 +47,8 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
         }
 
         nodes += res;
-        // state->unmake_move(move);
+
+        move_unmake(state, &moves[count]);
     }
 
     return nodes;

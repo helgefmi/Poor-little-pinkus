@@ -297,7 +297,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
     return 0;
 }
 
-void move_make_move(state_t* state, move_t* move)
+void move_make(state_t *state, move_t *move)
 {
     /* Save some data for unmake_move */
     move->castling = state->castling;
@@ -386,5 +386,72 @@ void move_make_move(state_t* state, move_t* move)
     }
     
     state->turn ^= 1;
+    state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
+}
+
+void move_unmake(state_t *state, move_t *move)
+{
+    /* Save some data for unmake_move */
+    state->castling = move->castling;
+    state->en_passant = move->en_passant;
+
+    int opponent = state->turn;
+    state->turn ^= 1;
+
+    /* Remove the piece that moved from the board. */
+    state->pieces[state->turn][move->from_piece] ^= move->from_square;
+    state->occupied[state->turn] ^= move->from_square;
+
+    /* If it is a capture, we need to remove the opponent piece as well. */
+    if (move->capture >= 0)
+    {
+        uint64_t to_remove_square = move->to_square;
+        if (move->from_piece == PAWN && move->to_square & state->en_passant)
+        {
+            /* The piece captured with en passant; we need to clear the board of the captured piece.
+                * We simply use the pawn move square of the opponent to find out which square to clear. */
+            to_remove_square = cached->moves_pawn_one[opponent][move->to_square_idx];
+        }
+
+        /* Remove the captured piece off the board. */
+        state->pieces[opponent][move->capture] ^= to_remove_square;
+        state->occupied[opponent] ^= to_remove_square;
+    }
+
+    /* Update the board with the new position of the piece. */
+    if (move->promotion >= 0)
+    {
+        state->pieces[state->turn][move->promotion] ^= move->to_square;
+    }
+    else
+    {
+        state->pieces[state->turn][move->from_piece] ^= move->to_square;
+    }
+
+    /* Update "occupied" with the same piece as above. */
+    state->occupied[state->turn] ^= move->to_square;
+    
+    if (move->from_piece == KING)
+    {
+        /* TODO: This can be made more efficient by caching more stuff..
+         * We could first see if the move was >1 step (one bitwise and and one lookup),
+         * then we could have a cache element where cached[to_square] gives the place where
+         * the rook should be positioned (one bitwise xor and one lookup). */
+
+        uint64_t left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
+        if ((left_castle << 2) & move->to_square)
+        {
+            state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
+            state->occupied[state->turn] ^= left_castle | left_castle << 3;
+        }
+
+        uint64_t right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
+        if ((right_castle >> 1) & move->to_square)
+        {
+            state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
+            state->occupied[state->turn] ^= right_castle | right_castle >> 2;
+        }
+    }
+    
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
 }

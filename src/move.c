@@ -184,44 +184,22 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
         /* TODO: Needs more rotated or magic or something bitboards! */
         if (piece == BISHOP || piece == QUEEN)
         {
-            valid_moves |= cached->moves_bishop[from_idx];
-
-            uint64_t nw_hits = cached->directions[NW][from_idx] & state->occupied_both;
-            valid_moves &= ~cached->directions[NW][LSB(nw_hits)];
-
-            uint64_t ne_hits = cached->directions[NE][from_idx] & state->occupied_both;
-            valid_moves &= ~cached->directions[NE][LSB(ne_hits)];
-
-            uint64_t se_hits = cached->directions[SE][from_idx] & state->occupied_both;
-            if (se_hits)
-                valid_moves &= ~cached->directions[SE][MSB(se_hits)];
-
-            uint64_t sw_hits = cached->directions[SW][from_idx] & state->occupied_both;
-            if (sw_hits)
-                valid_moves &= ~cached->directions[SW][MSB(sw_hits)];
-
-            valid_moves &= ~state->occupied[color];
+            valid_moves = cached->moves_bishop[from_idx]
+                         & ~cached->directions[NW][LSB(cached->directions[NW][from_idx] & state->occupied_both)]
+                         & ~cached->directions[NE][LSB(cached->directions[NE][from_idx] & state->occupied_both)]
+                         & ~cached->directions[SE][MSB(cached->directions[SE][from_idx] & state->occupied_both)]
+                         & ~cached->directions[SW][MSB(cached->directions[SW][from_idx] & state->occupied_both)]
+                         & ~state->occupied[color];
         }
 
         if (piece == ROOK || piece == QUEEN)
         {
-            valid_moves |= cached->moves_rook[from_idx];
-
-            uint64_t north_hits = cached->directions[NORTH][from_idx] & state->occupied_both;
-            valid_moves &= ~cached->directions[NORTH][LSB(north_hits)];
-
-            uint64_t east_hits = cached->directions[EAST][from_idx] & state->occupied_both;
-            valid_moves &= ~cached->directions[EAST][LSB(east_hits)];
-
-            uint64_t south_hits = cached->directions[SOUTH][from_idx] & state->occupied_both;
-            if (south_hits)
-                valid_moves &= ~cached->directions[SOUTH][MSB(south_hits)];
-
-            uint64_t west_hits = cached->directions[WEST][from_idx] & state->occupied_both;
-            if (west_hits)
-                valid_moves &= ~cached->directions[WEST][MSB(west_hits)];
-
-            valid_moves &= ~state->occupied[color];
+            valid_moves |= cached->moves_rook[from_idx]
+                         & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from_idx] & state->occupied_both)]
+                         & ~cached->directions[EAST][LSB(cached->directions[EAST][from_idx] & state->occupied_both)]
+                         & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from_idx] & state->occupied_both)]
+                         & ~cached->directions[WEST][MSB(cached->directions[WEST][from_idx] & state->occupied_both)]
+                         & ~state->occupied[color];
         }
     }
 

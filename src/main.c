@@ -19,7 +19,7 @@ int main()
     test_divide(&state, 1);
     */
 
-    test_perftsuite(4);
+    test_perftsuite(5);
 
     cache_destroy();
 

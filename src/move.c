@@ -35,6 +35,7 @@ void move_to_string(move_t *move, char *out)
 
 void move_generate_moves(state_t *state, move_t *moves, int *count)
 {
+
     /* Returns a list of the available moves/captures/promotions in a position, for the player in turn.
 
        The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere. */
@@ -193,11 +194,11 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
 
             uint64_t se_hits = cached->directions[SE][from_idx] & state->occupied_both;
             if (se_hits)
-                valid_moves &= ~cached->directions[SE][63 - __builtin_clzll(se_hits)];
+                valid_moves &= ~cached->directions[SE][MSB(se_hits)];
 
             uint64_t sw_hits = cached->directions[SW][from_idx] & state->occupied_both;
             if (sw_hits)
-                valid_moves &= ~cached->directions[SW][63 - __builtin_clzll(sw_hits)];
+                valid_moves &= ~cached->directions[SW][MSB(sw_hits)];
 
             valid_moves &= ~state->occupied[color];
         }
@@ -214,11 +215,11 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
 
             uint64_t south_hits = cached->directions[SOUTH][from_idx] & state->occupied_both;
             if (south_hits)
-                valid_moves &= ~cached->directions[SOUTH][63 - __builtin_clzll(south_hits)];
+                valid_moves &= ~cached->directions[SOUTH][MSB(south_hits)];
 
             uint64_t west_hits = cached->directions[WEST][from_idx] & state->occupied_both;
             if (west_hits)
-                valid_moves &= ~cached->directions[WEST][63 - __builtin_clzll(west_hits)];
+                valid_moves &= ~cached->directions[WEST][MSB(west_hits)];
 
             valid_moves &= ~state->occupied[color];
         }
@@ -276,13 +277,13 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         }
 
         uint64_t sw_hits = state->occupied_both & cached->directions[SW][square_idx];
-        if (sw_hits && (1ull << (63 - __builtin_clzll(sw_hits))) & bishop_and_queen)
+        if (sw_hits && ((1ull << MSB(sw_hits)) & bishop_and_queen))
         {
             return 1;
         }
 
         uint64_t se_hits = state->occupied_both & cached->directions[SE][square_idx];
-        if (se_hits && (1ull << (63 - __builtin_clzll(se_hits))) & bishop_and_queen)
+        if (se_hits && ((1ull << MSB(se_hits)) & bishop_and_queen))
         {
             return 1;
         }
@@ -303,13 +304,13 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         }
 
         uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square_idx];
-        if (south_hits && (1ull << (63 - __builtin_clzll(south_hits))) & rook_and_queen)
+        if (south_hits && ((1ull << MSB(south_hits)) & rook_and_queen))
         {
             return 1;
         }
 
         uint64_t west_hits = state->occupied_both & cached->directions[WEST][square_idx];
-        if (west_hits && (1ull << (63 - __builtin_clzll(west_hits))) & rook_and_queen)
+        if (west_hits && ((1ull << MSB(west_hits)) & rook_and_queen))
         {
             return 1;
         }

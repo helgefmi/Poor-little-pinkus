@@ -10,7 +10,6 @@ int util_char_to_color(char);
 uint64_t util_chars_to_square(char*);
 void util_square_to_chars(uint64_t, char*);
 char util_piece_to_char(int, int);
-void util_init();
 void util_int_to_bitmap(uint64_t);
 
 #endif

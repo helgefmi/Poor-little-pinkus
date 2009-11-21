@@ -43,14 +43,14 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
         while (bits)
         {
             uint64_t from_square = bits & -bits;
-            int from_square_idx = ffsll(from_square) - 1;
+            int from_square_idx = __builtin_ctzll(from_square);
             bits &= bits - 1;
 
             uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from_square_idx);
             while (valid_moves)
             {
                 uint64_t to_square = valid_moves & -valid_moves;
-                int to_square_idx = ffsll(to_square) - 1;
+                int to_square_idx = __builtin_ctzll(to_square);
                 valid_moves &= valid_moves - 1;
                 
                 /* Check if it's a capture. If so, set "capture" to the captured piece. */
@@ -257,7 +257,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         uint64_t square = squares & -squares;
         squares &= squares - 1;
 
-        int square_idx = ffsll(square) - 1;
+        int square_idx = __builtin_ctzll(square);
 
         /* Checking whether a pawn, knight or a king is attacking a square by using
          * bitwise and on the squares they can possibly attack from. */

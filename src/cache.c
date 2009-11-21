@@ -12,6 +12,20 @@ void cache_init()
     cached = malloc(sizeof(cached_t));
     memset(cached, 0, sizeof(cached_t));
 
+    cached->piece_to_int[(int)'p'] = PAWN;      cached->piece_to_int[(int)'P'] = PAWN;
+    cached->piece_to_int[(int)'n'] = KNIGHT;    cached->piece_to_int[(int)'N'] = KNIGHT;
+    cached->piece_to_int[(int)'b'] = BISHOP;    cached->piece_to_int[(int)'B'] = BISHOP;
+    cached->piece_to_int[(int)'r'] = ROOK;      cached->piece_to_int[(int)'R'] = ROOK;
+    cached->piece_to_int[(int)'q'] = QUEEN;     cached->piece_to_int[(int)'Q'] = QUEEN;
+    cached->piece_to_int[(int)'k'] = KING;      cached->piece_to_int[(int)'K'] = KING;
+
+    cached->int_to_piece[WHITE][PAWN] = 'P';    cached->int_to_piece[BLACK][PAWN] = 'p';
+    cached->int_to_piece[WHITE][KNIGHT] = 'N';  cached->int_to_piece[BLACK][KNIGHT] = 'n';
+    cached->int_to_piece[WHITE][BISHOP] = 'B';  cached->int_to_piece[BLACK][BISHOP] = 'b';
+    cached->int_to_piece[WHITE][ROOK] = 'R';    cached->int_to_piece[BLACK][ROOK] = 'r';
+    cached->int_to_piece[WHITE][QUEEN] = 'Q';   cached->int_to_piece[BLACK][QUEEN] = 'q';
+    cached->int_to_piece[WHITE][KING] = 'K';    cached->int_to_piece[BLACK][KING] = 'k';
+
     cached->castling_by_color[0] = A1 | H1;
     cached->castling_by_color[1] = A8 | H8;
 

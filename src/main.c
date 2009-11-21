@@ -10,7 +10,6 @@
 int main()
 {
     cache_init();
-    util_init();
 
     /*
     state_t state;

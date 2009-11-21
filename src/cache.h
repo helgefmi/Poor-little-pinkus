@@ -34,6 +34,10 @@ typedef struct
     /* Used to efficiently find out if a pawn can promote (basically set to
     * rank #8 for white and rank #1 for black) */
             promotion_rank[2];
+
+    int piece_to_int[256];
+    char int_to_piece[2][6];
+
 } cached_t;
 
 cached_t *cached;

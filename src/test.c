@@ -10,7 +10,7 @@
 
 /* File with functions used for testing the engine; perft and divide are found here! */
 
-uint64_t test_perft(state_t *state, int depth, int verbose)
+uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 {
     /* Given a position, it will recursivly apply every possible
      * move for a given depth and count the leaf nodes. */
@@ -47,7 +47,7 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
         {
             move_make(&duplicate, &moves[i]);
 
-            res = test_perft(&duplicate, depth - 1, 0);
+            res = test_perft_rec(&duplicate, depth - 1, 0);
             if (verbose && res > 0)
             {
                 char move_str[16];
@@ -63,13 +63,13 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
     return nodes;
 }
 
-void test_divide(state_t *state, int depth)
+void test_perft(state_t *state, int depth, int divide)
 {
     struct timeval start_time;
     struct timeval now;
     gettimeofday(&start_time, NULL);
 
-    uint64_t total_nodes = test_perft(state, depth, 1);
+    uint64_t total_nodes = test_perft_rec(state, depth, divide);
 
     gettimeofday(&now, NULL);
 
@@ -120,7 +120,7 @@ void test_perftsuite(int max_depth)
         while (depth <= max_depth && (answer_str = strtok(NULL, ";")))
         {
             uint64_t answer = atoll(answer_str),
-                     result = test_perft(&state, depth, 0);
+                     result = test_perft_rec(&state, depth, 0);
 
             total_nodes += result;
 

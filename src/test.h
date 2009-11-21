@@ -3,8 +3,8 @@
 
 #include "state.h"
 
-uint64_t test_perft(state_t*, int, int);
-void test_divide(state_t*, int);
+uint64_t test_perft_rec(state_t*, int, int);
+void test_perft(state_t*, int, int);
 void test_perftsuite(int);
 
 #endif

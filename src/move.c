@@ -28,8 +28,6 @@ void move_to_string(move_t *move, char *out)
     out[i++] = buf[0];
     out[i++] = buf[1];
     out[i++] = '\0';
-
-    free(buf);
 }
 
 void move_generate_moves(state_t *state, move_t *moves, int *count)

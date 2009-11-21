@@ -27,7 +27,7 @@
 
 /* A1 - H8 {{{ */
 #define A1 1ull << 0
-#define B1 1ull << 1ull
+#define B1 1ull << 1
 #define C1 1ull << 2
 #define D1 1ull << 3
 #define E1 1ull << 4
@@ -36,16 +36,16 @@
 #define H1 1ull << 7
 #define A2 1ull << 8
 #define B2 1ull << 9
-#define C2 1ull << 1ull0
-#define D2 1ull << 1ull1
-#define E2 1ull << 1ull2
-#define F2 1ull << 1ull3
-#define G2 1ull << 1ull4
-#define H2 1ull << 1ull5
-#define A3 1ull << 1ull6
-#define B3 1ull << 1ull7
-#define C3 1ull << 1ull8
-#define D3 1ull << 1ull9
+#define C2 1ull << 10
+#define D2 1ull << 11
+#define E2 1ull << 12
+#define F2 1ull << 13
+#define G2 1ull << 14
+#define H2 1ull << 15
+#define A3 1ull << 16
+#define B3 1ull << 17
+#define C3 1ull << 18
+#define D3 1ull << 19
 #define E3 1ull << 20
 #define F3 1ull << 21
 #define G3 1ull << 22

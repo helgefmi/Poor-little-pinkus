@@ -5,6 +5,11 @@
 #include "util.h"
 #include "defines.h"
 #include "cache.h"
+#if defined(__LP64__)
+#include "inline64.h"
+#else
+#include "inline32.h"
+#endif
 
 /* File containing functions for generating moves */
 
@@ -43,14 +48,14 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
         while (bits)
         {
             uint64_t from_square = bits & -bits;
-            int from_square_idx = __builtin_ctzll(from_square);
+            int from_square_idx = LSB(from_square);
             bits &= bits - 1;
 
             uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from_square_idx);
             while (valid_moves)
             {
                 uint64_t to_square = valid_moves & -valid_moves;
-                int to_square_idx = __builtin_ctzll(to_square);
+                int to_square_idx = LSB(to_square);
                 valid_moves &= valid_moves - 1;
                 
                 /* Check if it's a capture. If so, set "capture" to the captured piece. */
@@ -181,12 +186,10 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
             valid_moves |= cached->moves_bishop[from_idx];
 
             uint64_t nw_hits = cached->directions[NW][from_idx] & state->occupied_both;
-            if (nw_hits)
-                valid_moves &= ~cached->directions[NW][__builtin_ctzll(nw_hits)];
+            valid_moves &= ~cached->directions[NW][LSB(nw_hits)];
 
             uint64_t ne_hits = cached->directions[NE][from_idx] & state->occupied_both;
-            if (ne_hits)
-                valid_moves &= ~cached->directions[NE][__builtin_ctzll(ne_hits)];
+            valid_moves &= ~cached->directions[NE][LSB(ne_hits)];
 
             uint64_t se_hits = cached->directions[SE][from_idx] & state->occupied_both;
             if (se_hits)
@@ -204,12 +207,10 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
             valid_moves |= cached->moves_rook[from_idx];
 
             uint64_t north_hits = cached->directions[NORTH][from_idx] & state->occupied_both;
-            if (north_hits)
-                valid_moves &= ~cached->directions[NORTH][__builtin_ctzll(north_hits)];
+            valid_moves &= ~cached->directions[NORTH][LSB(north_hits)];
 
             uint64_t east_hits = cached->directions[EAST][from_idx] & state->occupied_both;
-            if (east_hits)
-                valid_moves &= ~cached->directions[EAST][__builtin_ctzll(east_hits)];
+            valid_moves &= ~cached->directions[EAST][LSB(east_hits)];
 
             uint64_t south_hits = cached->directions[SOUTH][from_idx] & state->occupied_both;
             if (south_hits)
@@ -236,7 +237,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         uint64_t square = squares & -squares;
         squares &= squares - 1;
 
-        int square_idx = __builtin_ctzll(square);
+        int square_idx = LSB(square);
 
         /* Checking whether a pawn, knight or a king is attacking a square by using
          * bitwise and on the squares they can possibly attack from. */

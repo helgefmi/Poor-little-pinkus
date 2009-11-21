@@ -21,7 +21,7 @@ typedef struct
             moves_king[64],
 
     /* Bishop, Rooks and Queen moves can be combined from rays going in every direction. */
-            directions[8][64],
+            directions[8][65],
 
     /* We use "directions" to calculate these as well */
             moves_bishop[64],

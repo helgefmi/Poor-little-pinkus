@@ -1,7 +1,7 @@
-#define _GNU_SOURCE
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "cache.h"
 #include "defines.h"
 
@@ -9,6 +9,8 @@ void cache_init()
 {
     /* Generates the cache from scratch.
      * Should only be called once. */
+    assert(!cached);
+
     cached = malloc(sizeof(cached_t));
     memset(cached, 0, sizeof(cached_t));
 
@@ -37,10 +39,10 @@ void cache_init()
     cached->promotion_rank[0] = A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8;
     cached->promotion_rank[1] = A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1;
 
-    cached->castling_availability[WHITE][0][ffsll(E1) - 1] = A1;
-    cached->castling_availability[WHITE][1][ffsll(E1) - 1] = H1;
-    cached->castling_availability[BLACK][0][ffsll(E8) - 1] = A8;
-    cached->castling_availability[BLACK][1][ffsll(E8) - 1] = H8;
+    cached->castling_availability[WHITE][0][__builtin_ctzll(E1)] = A1;
+    cached->castling_availability[WHITE][1][__builtin_ctzll(E1)] = H1;
+    cached->castling_availability[BLACK][0][__builtin_ctzll(E8)] = A8;
+    cached->castling_availability[BLACK][1][__builtin_ctzll(E8)] = H8;
 
     int y, x, y2, x2;
     int i;

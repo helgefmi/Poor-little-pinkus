@@ -32,23 +32,32 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
         return 0;
     }
 
-    char move_str[16];
     uint64_t nodes = 0;
 
-    while (count--)
+    #pragma omp parallel
     {
-        move_make(state,  &moves[count]);
+        state_t duplicate;
+        memcpy(&duplicate, state, sizeof(state_t));
 
-        uint64_t res = test_perft(state, depth - 1, 0);
-        if (verbose && res > 0)
+        int i;
+        uint64_t res;
+
+        #pragma omp for reduction(+:nodes) private(i, res)
+        for (i = 0; i < count; ++i)
         {
-            move_to_string(&moves[count], move_str);
-            printf("%s: %lld\n", move_str, res);
+            move_make(&duplicate, &moves[i]);
+
+            res = test_perft(&duplicate, depth - 1, 0);
+            if (verbose && res > 0)
+            {
+                char move_str[16];
+                move_to_string(&moves[i], move_str);
+                printf("%s: %lld\n", move_str, res);
+            }
+
+            nodes += res;
+            move_unmake(&duplicate, &moves[i]);
         }
-
-        nodes += res;
-
-        move_unmake(state, &moves[count]);
     }
 
     return nodes;

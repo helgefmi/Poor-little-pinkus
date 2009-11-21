@@ -181,7 +181,6 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
     }
     else
     {
-        /* TODO: Needs more rotated or magic or something bitboards! */
         if (piece == BISHOP || piece == QUEEN)
         {
             valid_moves = cached->moves_bishop[from_idx]

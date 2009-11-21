@@ -21,10 +21,7 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
         return res;
     }
 
-    char *move_str = (char*) malloc(sizeof(char) * 16);
-    memset(move_str, 0, sizeof(char) * 16);
-
-    move_t *moves = malloc(sizeof(move_t) * 100);
+    move_t moves[100];
     int count = 0;
 
     move_generate_moves(state, moves, &count);
@@ -32,20 +29,19 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
     /* Check for invalid position or board with no pieces :) */
     if (count <= 0)
     {
-        free(moves);
-        free(move_str);
         return 0;
     }
 
+    char move_str[16];
     uint64_t nodes = 0;
 
     while (count--)
     {
-        state_t *duplicate = malloc(sizeof(state_t));
-        memcpy(duplicate, state, sizeof(state_t));
+        state_t duplicate;
+        memcpy(&duplicate, state, sizeof(state_t));
 
-        move_make_move(duplicate,  &moves[count]);
-        uint64_t res = test_perft(duplicate, depth - 1, 0);
+        move_make_move(&duplicate,  &moves[count]);
+        uint64_t res = test_perft(&duplicate, depth - 1, 0);
 
         if (verbose && res > 0)
         {
@@ -54,12 +50,8 @@ uint64_t test_perft(state_t *state, int depth, int verbose)
         }
 
         nodes += res;
-        free(duplicate);
         // state->unmake_move(move);
     }
-
-    free(moves);
-    free(move_str);
 
     return nodes;
 }

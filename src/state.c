@@ -11,8 +11,7 @@
 void state_init_from_fen(state_t *state, char *fen)
 {
     /* Sets the board according to Forsyth-Edwards Notation.
-        * 
-        * See http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation for more information. */
+     * See http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation for more information. */
 
     memset(state, 0, sizeof(state_t));
 

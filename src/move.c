@@ -13,7 +13,8 @@ void move_to_string(move_t *move, char *out)
     int from_square = ffsll(move->from_square) - 1,
         to_square = ffsll(move->to_square) - 1,
         i = 0;
-    char *buf = malloc(sizeof(char) * 2);
+
+    char buf[2];
 
     util_square_to_chars(from_square, buf);
 
@@ -26,6 +27,7 @@ void move_to_string(move_t *move, char *out)
 
     out[i++] = buf[0];
     out[i++] = buf[1];
+    out[i++] = '\0';
 
     free(buf);
 }

@@ -13,15 +13,14 @@ int main()
     util_init();
 
     /*
-    state_t *state = malloc(sizeof(state_t));
-    state_init_from_fen(state, FEN_INIT);
+    state_t state;
+    state_init_from_fen(&state, FEN_INIT);
 
-    state_print(state);
-    test_divide(state, 6);
-    free(state);
+    state_print(&state);
+    test_divide(&state, 6);
     */
 
-    test_perftsuite(6);
+    test_perftsuite(4);
 
     cache_destroy();
 

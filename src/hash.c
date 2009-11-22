@@ -42,6 +42,20 @@ static void _init_zobrist()
         hash_zobrist->castling[idx] = _rand64();
     }
 
+    hash_zobrist->rook_castling[WHITE][4][2] = hash_zobrist->pieces[WHITE][ROOK][0] | hash_zobrist->pieces[WHITE][ROOK][3];
+    hash_zobrist->rook_castling[WHITE][4][6] = hash_zobrist->pieces[WHITE][ROOK][5] | hash_zobrist->pieces[WHITE][ROOK][7];
+
+    hash_zobrist->rook_castling[BLACK][7* 8 + 4][7 * 8 + 2] = hash_zobrist->pieces[BLACK][ROOK][7 * 8 + 0] | hash_zobrist->pieces[BLACK][ROOK][7 * 8 + 3];
+    hash_zobrist->rook_castling[BLACK][7* 8 + 4][7 * 8 + 6] = hash_zobrist->pieces[BLACK][ROOK][7 * 8 + 5] | hash_zobrist->pieces[BLACK][ROOK][7 * 8 + 7];
+
+    hash_zobrist->state_castling[WHITE][1] = hash_zobrist->castling[0];
+    hash_zobrist->state_castling[WHITE][128] = hash_zobrist->castling[7];
+    hash_zobrist->state_castling[WHITE][129] = hash_zobrist->castling[0] | hash_zobrist->castling[7];
+
+    hash_zobrist->state_castling[BLACK][1] = hash_zobrist->castling[8 * 7 + 0];
+    hash_zobrist->state_castling[BLACK][128] = hash_zobrist->castling[8 * 7 + 7];
+    hash_zobrist->state_castling[BLACK][129] = hash_zobrist->castling[8 * 7 + 0] | hash_zobrist->castling[8 * 7 + 7];
+
     hash_zobrist->turn = _rand64();
 }
 

@@ -29,8 +29,8 @@ typedef struct
 
     /* Used to efficiently find out if castling is available */
             castling_availability[2][2][64],
-
             castling_by_color[2],
+            castling_rookmask[2][64][64],
 
     /* Used to efficiently find out if there are any pieces blocking a castle */
             castling_steps[2][2],

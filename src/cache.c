@@ -44,6 +44,12 @@ void cache_init()
     cached->castling_availability[BLACK][0][__builtin_ctzll(E8)] = A8;
     cached->castling_availability[BLACK][1][__builtin_ctzll(E8)] = H8;
 
+    cached->castling_rookmask[WHITE][4][2] = A1 | D1;
+    cached->castling_rookmask[WHITE][4][6] = F1 | H1;
+
+    cached->castling_rookmask[BLACK][7* 8 + 4][7 * 8 + 2] = A8 | D8;
+    cached->castling_rookmask[BLACK][7* 8 + 4][7 * 8 + 6] = F8 | H8;
+
     int y, x, y2, x2;
     int i;
     int ydir, xdir, dir;

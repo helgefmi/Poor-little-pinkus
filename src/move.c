@@ -364,7 +364,7 @@ void move_make(state_t *state, move_t *move)
         state->en_passant = 0;
     }
 
-    uint64_t left_castle, right_castle;
+    uint64_t rook_mask;
     switch (move->from_piece)
     {
         case PAWN:
@@ -393,30 +393,18 @@ void move_make(state_t *state, move_t *move)
             break;
 
         case KING:
-            /* TODO: This can be made more efficient by caching more stuff..
-            * We could first see if the move was >1 step (one bitwise and and one lookup),
-            * then we could have a cache element where cached[to_square] gives the place where
-            * the rook should be positioned (one bitwise xor and one lookup). */
+            rook_mask = cached->castling_rookmask[state->turn][move->from_square_idx][move->to_square_idx];
 
-            left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
-            if ((left_castle << 2) & move->to_square)
-            {
-                state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
-                state->occupied[state->turn] ^= left_castle | left_castle << 3;
+            state->pieces[state->turn][ROOK] ^= rook_mask;
+            state->occupied[state->turn] ^= rook_mask;
+            state->zobrist ^= hash_zobrist->rook_castling[state->turn][move->from_square_idx][move->to_square_idx];
 
-                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 1];
-                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 4];
-            }
-
-            right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
-            if ((right_castle >> 1) & move->to_square)
-            {
-                state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
-                state->occupied[state->turn] ^= right_castle | right_castle >> 2;
-
-                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 1];
-                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 3];
-            }
+            #if 0
+            /* These three lines are apparently slower than the branching/LSB thingie below ..*/
+            uint64_t castling = state->castling & cached->castling_by_color[state->turn];
+            state->castling ^= castling;
+            state->zobrist ^= hash_zobrist->state_castling[state->turn][castling >> (56 * state->turn)];
+            #endif
 
             uint64_t castling = state->castling & cached->castling_by_color[state->turn];
             state->castling ^= castling;
@@ -479,7 +467,7 @@ void move_unmake(state_t *state, move_t *move)
     /* Update "occupied" with the same piece as above. */
     state->occupied[state->turn] ^= move->to_square;
     
-    uint64_t left_castle, right_castle;
+    uint64_t rook_mask;
 
     switch (move->from_piece)
     {
@@ -490,24 +478,10 @@ void move_unmake(state_t *state, move_t *move)
             break;
 
         case KING:
-            /* TODO: This can be made more efficient by caching more stuff..
-            * We could first see if the move was >1 step (one bitwise and and one lookup),
-            * then we could have a cache element where cached[to_square] gives the place where
-            * the rook should be positioned (one bitwise xor and one lookup). */
+            rook_mask = cached->castling_rookmask[state->turn][move->from_square_idx][move->to_square_idx];
 
-            left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
-            if ((left_castle << 2) & move->to_square)
-            {
-                state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
-                state->occupied[state->turn] ^= left_castle | left_castle << 3;
-            }
-
-            right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
-            if ((right_castle >> 1) & move->to_square)
-            {
-                state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
-                state->occupied[state->turn] ^= right_castle | right_castle >> 2;
-            }
+            state->pieces[state->turn][ROOK] ^= rook_mask;
+            state->occupied[state->turn] ^= rook_mask;
             break;
     }
     

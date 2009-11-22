@@ -7,6 +7,12 @@
 typedef struct {
     uint64_t pieces[2][6][64];
     uint64_t turn, en_passant[64], castling[64];
+
+    /* The rook mask when castling, given a king color, and move (from_square, to_square). */
+    uint64_t rook_castling[2][64][64];
+
+    /* The combined castling hashes for the 3 variants. Room for 130 because (A1 | H1) is maximum with 129. */
+    uint64_t state_castling[2][130];
 } hash_zobrist_t;
 
 typedef struct 

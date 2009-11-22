@@ -22,12 +22,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     }
 
     uint64_t zobrist_key = hash_make_zobrist(state);
-    hash_node_t *hash_node = 0;
-    #pragma omp critical
-    {
-        hash_node = hash_get_node(zobrist_key);
-    }
-
+    hash_node_t *hash_node = hash_get_node(zobrist_key);
     if (hash_node->hash == zobrist_key && hash_node->depth == depth)
     {
         ++_cache_hits;
@@ -51,30 +46,22 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 
     uint64_t nodes = 0;
 
-    #pragma omp parallel
+    int i;
+    for (i = 0; i < count; ++i)
     {
-        state_t duplicate;
-        memcpy(&duplicate, state, sizeof(state_t));
+        move_make(state, &moves[i]);
 
-        int i;
-        uint64_t res;
-        #pragma omp for reduction(+:nodes) private(i, res)
-        for (i = 0; i < count; ++i)
+        uint64_t res = test_perft_rec(state, depth - 1, 0);
+        nodes += res;
+
+        if (verbose && res > 0)
         {
-            move_make(&duplicate, &moves[i]);
-
-            res = test_perft_rec(&duplicate, depth - 1, 0);
-            nodes += res;
-
-            if (verbose && res > 0)
-            {
-                char move_str[16];
-                move_to_string(&moves[i], move_str);
-                printf("%s: %lld\n", move_str, res);
-            }
-
-            move_unmake(&duplicate, &moves[i]);
+            char move_str[16];
+            move_to_string(&moves[i], move_str);
+            printf("%s: %lld\n", move_str, res);
         }
+
+        move_unmake(state, &moves[i]);
     }
 
     hash_add_node(zobrist_key, nodes, depth);

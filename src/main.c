@@ -8,6 +8,7 @@
 #include "test.h"
 #include "hash.h"
 #include "uci.h"
+#include "eval.h"
 
 void print_usage()
 {
@@ -94,6 +95,13 @@ int main(int argc, char **argv)
 
     cache_init();
     hash_init();
+
+#if 0
+    state_t tmp_state;
+    state_init_from_fen(&tmp_state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1");
+    printf("%d\n", eval_state(&tmp_state));
+    exit(1);
+#endif
 
     /* State will only be set up with -fen if we want perft/divide */
     state_t *state = 0;

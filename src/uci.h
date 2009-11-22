@@ -11,5 +11,7 @@ void uci_halt_search();
 void uci_new_game();
 void uci_init_position(char*);
 void uci_set_hash_size(int);
+void uci_go();
 
+void uci_debug(char*);
 #endif

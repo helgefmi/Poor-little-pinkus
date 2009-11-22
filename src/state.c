@@ -114,7 +114,7 @@ int state_init_from_fen(state_t *state, char *fen)
     res = sscanf(&fen[i], "%s", num);
     if (1 == res && num[0] != '-')
     {
-        int halfmove = atoi(num);
+        //int halfmove = atoi(num);
         i += strlen(num);
     }
     else
@@ -128,7 +128,7 @@ int state_init_from_fen(state_t *state, char *fen)
     res = sscanf(&fen[i], "%s", num);
     if (1 == res && num[0] != '-')
     {
-        int fullmove = atoi(num);
+        //int fullmove = atoi(num);
         i += strlen(num);
     }
     else

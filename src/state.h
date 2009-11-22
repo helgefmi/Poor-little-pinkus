@@ -10,7 +10,8 @@
  * turn        - Who's turn it is.
  * castling    - Castling availability.
  * en_passant  - En passant availability.
- * occupied    - Which squares are occupied by white, black, or both. */
+ * occupied    - Which squares are occupied by white, black, or both.
+ * zobrist     - A unique key for a given position. Used for hashing. */
 
 typedef struct
 {
@@ -19,6 +20,8 @@ typedef struct
     uint64_t castling, en_passant;
     uint64_t occupied[2];
     uint64_t occupied_both;
+
+    uint64_t zobrist;
 } state_t;
 
 struct move_t;

@@ -6,15 +6,14 @@
 #include "defines.h"
 #include "cache.h"
 #if defined(__LP64__)
-#include "inline64.h"
+    #include "inline64.h"
 #else
-#include "inline32.h"
+    #include "inline32.h"
 #endif
-
-/* File containing functions for generating moves */
 
 void move_to_string(move_t *move, char *out)
 {
+    /* Makes a string out of a move_t struct */
     int i = 0;
 
     char buf[2];
@@ -35,14 +34,13 @@ void move_to_string(move_t *move, char *out)
 
 void move_generate_moves(state_t *state, move_t *moves, int *count)
 {
-
     /* Returns a list of the available moves/captures/promotions in a position, for the player in turn.
-
-       The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere. */
+       The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere.
+       In this scenario, *count will be set to -1. */
     int opponent = 1 - state->turn,
         piece;
 
-    for (piece = 0; piece < 6; ++piece)
+    for (piece = PAWN; piece <= KING; ++piece)
     {
         uint64_t bits = state->pieces[state->turn][piece];
 
@@ -63,7 +61,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 int capture = -1;
                 if (to_square & state->occupied_both)
                 {
-                    for (capture = 0; capture < 6; ++capture)
+                    for (capture = PAWN; capture <= KING; ++capture)
                     {
                         if (to_square & state->pieces[opponent][capture])
                         {
@@ -181,6 +179,9 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
     }
     else
     {
+        /* Check each direction and see if there are any blockers. If there are, take the nearest blocker
+         * (might be LSB and might be LSB) and remove the path in the same direction
+         * with the blocker as source this time. */
         if (piece == BISHOP || piece == QUEEN)
         {
             valid_moves = cached->moves_bishop[from_idx]
@@ -218,7 +219,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
         int square_idx = LSB(square);
 
         /* Checking whether a pawn, knight or a king is attacking a square by using
-         * bitwise and on the squares they can possibly attack from. */
+         * "bitwise and" on the squares they can possibly attack from. */
         if (state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx])
         {
             return 1;

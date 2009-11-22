@@ -7,9 +7,9 @@
 #include "move.h"
 #include "defines.h"
 #include "state.h"
+#include "hash.h"
 
-/* File with functions used for testing the engine; perft and divide are found here! */
-
+static uint64_t _cache_hits = 0, _cache_misses = 0;
 uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 {
     /* Given a position, it will recursivly apply every possible
@@ -19,6 +19,23 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     {
         int res = !move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn);
         return res;
+    }
+
+    uint64_t zobrist_key = hash_make_zobrist(state);
+    hash_node_t *hash_node = 0;
+    #pragma omp critical
+    {
+        hash_node = hash_get_node(zobrist_key);
+    }
+
+    if (hash_node->hash == zobrist_key && hash_node->depth == depth)
+    {
+        ++_cache_hits;
+        return hash_node->score;
+    }
+    else
+    {
+        ++_cache_misses;
     }
 
     move_t moves[100];
@@ -41,13 +58,14 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 
         int i;
         uint64_t res;
-
         #pragma omp for reduction(+:nodes) private(i, res)
         for (i = 0; i < count; ++i)
         {
             move_make(&duplicate, &moves[i]);
 
             res = test_perft_rec(&duplicate, depth - 1, 0);
+            nodes += res;
+
             if (verbose && res > 0)
             {
                 char move_str[16];
@@ -55,16 +73,18 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
                 printf("%s: %lld\n", move_str, res);
             }
 
-            nodes += res;
             move_unmake(&duplicate, &moves[i]);
         }
     }
+
+    hash_add_node(zobrist_key, nodes, depth);
 
     return nodes;
 }
 
 void test_perft(state_t *state, int depth, int divide)
 {
+    /* Used for both -mode perft and -mode divide */
     struct timeval start_time;
     struct timeval now;
     gettimeofday(&start_time, NULL);
@@ -80,6 +100,7 @@ void test_perft(state_t *state, int depth, int divide)
     spent_time /= 1000000.0;
 
     printf("Time: %f, Nodes: %llu, nps: %f\n", spent_time, total_nodes, total_nodes/spent_time);
+    printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }
 
 void test_perftsuite(int max_depth)
@@ -119,8 +140,9 @@ void test_perftsuite(int max_depth)
 
         while (depth <= max_depth && (answer_str = strtok(NULL, ";")))
         {
-            uint64_t answer = atoll(answer_str),
-                     result = test_perft_rec(&state, depth, 0);
+            uint64_t answer = atoll(answer_str);
+
+            uint64_t result = test_perft_rec(&state, depth, 0);
 
             total_nodes += result;
 
@@ -155,4 +177,5 @@ void test_perftsuite(int max_depth)
     total_time += (now.tv_usec - start_time.tv_usec);
     total_time /= 1000000.0;
     printf("%llu nodes in %.2f seconds with nps=%f\n", total_nodes, total_time, total_nodes / total_time);
+    printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }

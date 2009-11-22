@@ -9,10 +9,12 @@
 #include "util.h"
 #include "hash.h"
 
-void state_init_from_fen(state_t *state, char *fen)
+int state_init_from_fen(state_t *state, char *fen)
 {
     /* Sets the board according to Forsyth-Edwards Notation.
-     * See http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation for more information. */
+     * See http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation for more information.
+     *
+     * Returns the number of used characters from fen */
 
     memset(state, 0, sizeof(state_t));
 
@@ -94,10 +96,48 @@ void state_init_from_fen(state_t *state, char *fen)
     {
         uint64_t square_idx = util_chars_to_square(&fen[i]);
         state->en_passant = (1ull << square_idx);
+
+        i += 2;
+    }
+    else
+    {
+        ++i;
+    }
+
+    ++i;
+
+    /* TODO: Halfmove and Fullmove numbers from FEN. */
+    /* Halfmove */
+    char num[16];
+    int res;
+
+    res = sscanf(&fen[i], "%s", num);
+    if (1 == res && num[0] != '-')
+    {
+        int halfmove = atoi(num);
+        i += strlen(num);
+    }
+    else
+    {
+        ++i;
+    }
+
+    ++i;
+
+    /* Fullmove */
+    res = sscanf(&fen[i], "%s", num);
+    if (1 == res && num[0] != '-')
+    {
+        int fullmove = atoi(num);
+        i += strlen(num);
+    }
+    else
+    {
+        ++i;
     }
 
     state->zobrist = hash_make_zobrist(state);
-    /* TODO: Halfmove and Fullmove numbers from FEN. */
+    return i;
 }
 
 void state_print(state_t *state)

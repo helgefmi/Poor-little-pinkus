@@ -24,12 +24,18 @@ void move_to_string(move_t *move, char *out)
     out[i++] = buf[0];
     out[i++] = buf[1];
 
-    out[i++] = (move->capture >= 0) ? 'x' : ' ';
+    //out[i++] = (move->capture >= 0) ? 'x' : ' ';
 
     util_square_to_chars(move->to_square_idx, buf);
 
     out[i++] = buf[0];
     out[i++] = buf[1];
+
+    if (move->promotion >= 0)
+    {
+        out[i++] = util_piece_to_char(BLACK, move->promotion);
+    }
+
     out[i++] = '\0';
 }
 

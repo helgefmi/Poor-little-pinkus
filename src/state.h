@@ -26,7 +26,7 @@ typedef struct
 
 struct move_t;
 
-void state_init_from_fen(state_t*, char*);
+int state_init_from_fen(state_t*, char*);
 void state_print(state_t*);
 
 #endif

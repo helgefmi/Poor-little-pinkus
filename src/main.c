@@ -7,6 +7,7 @@
 #include "state.h"
 #include "test.h"
 #include "hash.h"
+#include "uci.h"
 
 void print_usage()
 {
@@ -18,17 +19,17 @@ void print_usage()
 " -depth <n>       - Sets the depth of perft, divide or perftsuite modes.\n"
 " -tsize <n>       - Sets the hash table size.\n\n"
 " -mode divide     - Runs through every move in a position prints their\n"
-"                    leaf-nodes counts.\n"
-" -mode perft      - Prints out the number of leaf nodes of a position running\n"
-"                    through every move with n depth.\n"
+"                    leaf-node counts.\n"
+" -mode perft      - Same as '-mode divide' but will only give one leaf-node\n"
+"                    count for the starting position, not for each move.\n"
 " -mode perftsuite - Runs through a set of 126 positions and compare the perft\n"
 "                    values by their correct values. Runs with arbitrary depth.\n"
-" -mode xboard     - Starts the engine in xboard mode.\n\n"
-" Anything else prints our this message.\n");
+" -mode uci        - Starts the engine in uci mode.\n\n"
+" Anything else prints out this message.\n");
 }
 
 #define MODE_PRINT_USAGE 0
-#define MODE_XBOARD 1
+#define MODE_UCI 1
 #define MODE_PERFT 2
 #define MODE_DIVIDE 3
 #define MODE_PERFTSUITE 4
@@ -70,9 +71,9 @@ int main(int argc, char **argv)
             {
                 mode = MODE_PERFTSUITE;
             }
-            else if (0 == strcmp(argv[i], "xboard"))
+            else if (0 == strcmp(argv[i], "uci"))
             {
-                mode = MODE_XBOARD;
+                mode = MODE_UCI;
             }
             else
             {
@@ -90,17 +91,28 @@ int main(int argc, char **argv)
     }
 
     srand(time(0));
+
     cache_init();
+    hash_init();
 
-    printf("Initializing hash table with size: %d\n", table_size);
-    hash_init(table_size);
-
-    state_t *state = malloc(sizeof(state_t));
-    state_init_from_fen(state, fen);
+    /* State will only be set up with -fen if we want perft/divide */
+    state_t *state = 0;
+    switch (mode)
+    {
+        case MODE_PERFT:
+        case MODE_DIVIDE:
+            state = malloc(sizeof(state_t));
+            state_init_from_fen(state, fen);
+        case MODE_PERFTSUITE:
+            printf("Initializing hash table with size: %d\n", table_size);
+            hash_set_tsize(table_size);
+            break;
+    }
 
     switch (mode)
     {
-        case MODE_XBOARD:
+        case MODE_UCI:
+            uci_start();
             break;
         case MODE_PERFTSUITE:
             test_perftsuite(depth);

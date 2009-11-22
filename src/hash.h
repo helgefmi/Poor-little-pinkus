@@ -24,8 +24,10 @@ typedef struct
 
 hash_zobrist_t *hash_zobrist;
 
-void hash_init(int);
+void hash_init();
 void hash_destroy();
+void hash_set_tsize(int);
+void hash_wipe();
 
 uint64_t hash_make_zobrist(state_t*);
 

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -60,24 +61,35 @@ static void _init_zobrist()
 }
 
 
-void hash_init(int table_size)
+void hash_init()
 {
-    _hash_table_size = table_size;
+    assert(!hash_table);
 
     hash_zobrist = malloc(sizeof(hash_zobrist_t));
-
-    hash_table = malloc(sizeof(hash_node_t) * _hash_table_size);
-    memset(hash_table, 0, sizeof(hash_node_t) * _hash_table_size);
-
     _init_zobrist();
 }
 
 void hash_destroy()
 {
-    free(hash_table);
+    if (hash_table)
+    {
+        free(hash_table);
+    }
+
     free(hash_zobrist);
 }
 
+void hash_set_tsize(int size)
+{
+    if (hash_table)
+    {
+        free(hash_table);
+    }
+
+    _hash_table_size = size;
+    hash_table = malloc(sizeof(hash_node_t) * _hash_table_size);
+    memset(hash_table, 0, sizeof(hash_node_t) * _hash_table_size);
+}
 
 void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth)
 {
@@ -140,4 +152,9 @@ uint64_t hash_make_zobrist(state_t *state)
     }
 
     return ret;
+}
+
+void hash_wipe()
+{
+    memset(hash_table, 0, sizeof(hash_table));
 }

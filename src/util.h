@@ -12,4 +12,6 @@ void util_square_to_chars(uint64_t, char*);
 char util_piece_to_char(int, int);
 void util_int_to_bitmap(uint64_t);
 
+char *util_trim_str(char*);
+
 #endif

@@ -57,3 +57,21 @@ void util_int_to_bitmap(uint64_t bits)
     }
     printf("\n");
 }
+
+char *util_trim_str(char *str)
+{
+    char *end = str + strlen(str) - 1;
+
+    while (*str && isspace(*str))
+    {
+        ++str;
+    }
+
+    while (*end && isspace(*end))
+    {
+        --end;
+    }
+
+    *(end + 1) = '\0';
+    return str;
+}

@@ -126,82 +126,87 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
     uint64_t valid_moves = 0;
     int opponent = 1 - color;
 
-    if (piece == PAWN)
+    switch (piece)
     {
-        /* First, we check if a one-step move is available, and if so,
-         * we set valid_moves to two steps forwards (since we know
-         * that the first step wasn't blocked by a piece). */
-        valid_moves = cached->moves_pawn_one[color][from_idx] & ~state->occupied_both;
+        case PAWN:
+            /* First, we check if a one-step move is available, and if so,
+            * we set valid_moves to two steps forwards (since we know
+            * that the first step wasn't blocked by a piece). */
+            valid_moves = cached->moves_pawn_one[color][from_idx] & ~state->occupied_both;
 
-        if (valid_moves)
-        {
-            valid_moves = cached->moves_pawn_two[color][from_idx] & ~state->occupied_both;
-        }
-
-        valid_moves |= cached->attacks_pawn[color][from_idx] & state->en_passant;
-
-        /* Check the attack-pattern against opponents and/or en passant availablility. */
-        valid_moves |= cached->attacks_pawn[color][from_idx] & state->occupied[opponent];
-
-    }
-    else if (piece == KNIGHT)
-    {
-        valid_moves = cached->moves_knight[from_idx] & ~state->occupied[color];
-
-    }
-    else if (piece == KING)
-    {
-        valid_moves = cached->moves_king[from_idx] & ~state->occupied[color];
-
-        /* We need to first check if the path is free and that castling is available in that direction.
-         * Then we need to see if the king or any of the "stepping" squares (F1 and G1 for white king side castle,
-         * for instance) are being attacked. */
-
-        uint64_t left_castle = cached->castling_availability[color][0][from_idx];
-        if (left_castle & state->castling)
-        {
-            uint64_t steps = cached->castling_steps[color][0];
-            uint64_t move_steps = steps | left_castle << 1;
-            if ((0 == (move_steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+            if (valid_moves)
             {
-                valid_moves |= left_castle << 2;
+                valid_moves = cached->moves_pawn_two[color][from_idx] & ~state->occupied_both;
             }
-        }
 
-        uint64_t right_castle = cached->castling_availability[color][1][from_idx];
-        if (right_castle & state->castling)
-        {
-            uint64_t steps = cached->castling_steps[color][1];
-            if ((0 == (steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+            /* Check the attack-pattern against opponents and/or en passant availablility. */
+            valid_moves |= cached->attacks_pawn[color][from_idx] & (state->en_passant | state->occupied[opponent]);
+            break;
+
+        case KNIGHT:
+            valid_moves = cached->moves_knight[from_idx] & ~state->occupied[color];
+            break;
+
+        case KING:
+            valid_moves = cached->moves_king[from_idx] & ~state->occupied[color];
+
+            /* We need to first check if the path is free and that castling is available in that direction.
+            * Then we need to see if the king or any of the "stepping" squares (F1 and G1 for white king side castle,
+            * for instance) are being attacked. */
+
+            uint64_t left_castle = cached->castling_availability[color][0][from_idx];
+            if (left_castle & state->castling)
             {
-                valid_moves |= right_castle >> 1;
+                uint64_t steps = cached->castling_steps[color][0];
+                uint64_t move_steps = steps | left_castle << 1;
+                if ((0 == (move_steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+                {
+                    valid_moves |= left_castle << 2;
+                }
             }
-        }
-    }
-    else
-    {
+
+            uint64_t right_castle = cached->castling_availability[color][1][from_idx];
+            if (right_castle & state->castling)
+            {
+                uint64_t steps = cached->castling_steps[color][1];
+                if ((0 == (steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+                {
+                    valid_moves |= right_castle >> 1;
+                }
+            }
+            break;
+
         /* Check each direction and see if there are any blockers. If there are, take the nearest blocker
-         * (might be LSB and might be MSB) and remove the path in the same direction
-         * with the blocker as source this time. */
-        if (piece == BISHOP || piece == QUEEN)
-        {
+        * (might be LSB and might be MSB) and remove the path in the same direction
+        * with the blocker as source this time. */
+        case QUEEN:
+            valid_moves = (cached->moves_rook[from_idx] | cached->moves_bishop[from_idx])
+                            & ~cached->directions[NW][LSB(cached->directions[NW][from_idx] & state->occupied_both)]
+                            & ~cached->directions[NE][LSB(cached->directions[NE][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SE][MSB(cached->directions[SE][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SW][MSB(cached->directions[SW][from_idx] & state->occupied_both)]
+                            & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from_idx] & state->occupied_both)]
+                            & ~cached->directions[EAST][LSB(cached->directions[EAST][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from_idx] & state->occupied_both)]
+                            & ~cached->directions[WEST][MSB(cached->directions[WEST][from_idx] & state->occupied_both)]
+                            & ~state->occupied[color];
+            break;
+        case BISHOP:
             valid_moves = cached->moves_bishop[from_idx]
-                         & ~cached->directions[NW][LSB(cached->directions[NW][from_idx] & state->occupied_both)]
-                         & ~cached->directions[NE][LSB(cached->directions[NE][from_idx] & state->occupied_both)]
-                         & ~cached->directions[SE][MSB(cached->directions[SE][from_idx] & state->occupied_both)]
-                         & ~cached->directions[SW][MSB(cached->directions[SW][from_idx] & state->occupied_both)]
-                         & ~state->occupied[color];
-        }
-
-        if (piece == ROOK || piece == QUEEN)
-        {
-            valid_moves |= cached->moves_rook[from_idx]
-                         & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from_idx] & state->occupied_both)]
-                         & ~cached->directions[EAST][LSB(cached->directions[EAST][from_idx] & state->occupied_both)]
-                         & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from_idx] & state->occupied_both)]
-                         & ~cached->directions[WEST][MSB(cached->directions[WEST][from_idx] & state->occupied_both)]
-                         & ~state->occupied[color];
-        }
+                            & ~cached->directions[NW][LSB(cached->directions[NW][from_idx] & state->occupied_both)]
+                            & ~cached->directions[NE][LSB(cached->directions[NE][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SE][MSB(cached->directions[SE][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SW][MSB(cached->directions[SW][from_idx] & state->occupied_both)]
+                            & ~state->occupied[color];
+            break;
+        case ROOK:
+            valid_moves = cached->moves_rook[from_idx]
+                            & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from_idx] & state->occupied_both)]
+                            & ~cached->directions[EAST][LSB(cached->directions[EAST][from_idx] & state->occupied_both)]
+                            & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from_idx] & state->occupied_both)]
+                            & ~cached->directions[WEST][MSB(cached->directions[WEST][from_idx] & state->occupied_both)]
+                            & ~state->occupied[color];
+            break;
     }
 
     return valid_moves;
@@ -234,8 +239,7 @@ int move_is_attacked(state_t *state, uint64_t squares, int attacker)
             return 1;
         }
 
-        /* Ugly and FAST code incoming :-)
-         * We check each 8 directions from the square index, and find out the intersects with occupied_all.
+        /* We check each 8 directions from the square index, and find out the intersects with occupied_all.
          * Then we take the first bit relative to the position - that is the least significant bit
          * in the following directions: NW N NE E, and the most significant bit in the other directions -
          * and see if it's currently being occupied by a queen or rook/bishop */
@@ -360,76 +364,74 @@ void move_make(state_t *state, move_t *move)
         state->en_passant = 0;
     }
 
-    if (move->from_piece == KING)
+    uint64_t left_castle, right_castle;
+    switch (move->from_piece)
     {
-        /* TODO: This can be made more efficient by caching more stuff..
-         * We could first see if the move was >1 step (one bitwise and and one lookup),
-         * then we could have a cache element where cached[to_square] gives the place where
-         * the rook should be positioned (one bitwise xor and one lookup). */
+        case PAWN:
+            /* Clear / set en_passant. */
+            if (~cached->moves_pawn_one[state->turn][move->from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][move->from_square_idx])
+            {
+                state->en_passant = cached->moves_pawn_one[state->turn][move->from_square_idx];
+                state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
+            }
+            break;
 
-        uint64_t left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
-        if ((left_castle << 2) & move->to_square)
-        {
-            state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
-            state->occupied[state->turn] ^= left_castle | left_castle << 3;
+        case KNIGHT:
+        case BISHOP:
+            break;
 
-            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 1];
-            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 4];
-        }
+        case ROOK:
+            /* Clear the appropriate castling availability. */
+            if (state->castling & move->from_square)
+            {
+                state->castling &= ~move->from_square;
+                state->zobrist ^= hash_zobrist->castling[move->from_square_idx];
+            }
+            break;
 
-        uint64_t right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
-        if ((right_castle >> 1) & move->to_square)
-        {
-            state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
-            state->occupied[state->turn] ^= right_castle | right_castle >> 2;
+        case QUEEN:
+            break;
 
-            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 1];
-            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 3];
-        }
+        case KING:
+            /* TODO: This can be made more efficient by caching more stuff..
+            * We could first see if the move was >1 step (one bitwise and and one lookup),
+            * then we could have a cache element where cached[to_square] gives the place where
+            * the rook should be positioned (one bitwise xor and one lookup). */
 
-        uint64_t castling = state->castling & cached->castling_by_color[state->turn];
-        while (castling)
-        {
-            int castling_idx = LSB(castling);
-            castling &= castling - 1;
-            state->zobrist ^= hash_zobrist->castling[castling_idx];
-        }
-        /* Clear the appropriate castling availability. */
-        state->castling &= ~cached->castling_by_color[state->turn];
+            left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
+            if ((left_castle << 2) & move->to_square)
+            {
+                state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
+                state->occupied[state->turn] ^= left_castle | left_castle << 3;
 
-    }
-    else if (move->from_piece == ROOK)
-    {
-        /* Clear the appropriate castling availability. */
-        if (state->castling & move->from_square)
-        {
-            state->castling &= ~move->from_square;
-            state->zobrist ^= hash_zobrist->castling[move->from_square_idx];
-        }
-    }
-    else if (move->from_piece == PAWN)
-    {
-        /* Clear / set en_passant. */
-        if (~cached->moves_pawn_one[state->turn][move->from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][move->from_square_idx])
-        {
-            state->en_passant = cached->moves_pawn_one[state->turn][move->from_square_idx];
-            state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
-        }
+                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 1];
+                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 4];
+            }
+
+            right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
+            if ((right_castle >> 1) & move->to_square)
+            {
+                state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
+                state->occupied[state->turn] ^= right_castle | right_castle >> 2;
+
+                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 1];
+                state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 3];
+            }
+
+            uint64_t castling = state->castling & cached->castling_by_color[state->turn];
+            state->castling ^= castling;
+
+            while (castling)
+            {
+                int castling_idx = LSB(castling);
+                castling &= castling - 1;
+                state->zobrist ^= hash_zobrist->castling[castling_idx];
+            }
+            break;
     }
     
     state->turn ^= 1;
     state->zobrist ^= hash_zobrist->turn;
-
-    /*
-    if (state->zobrist != hash_make_zobrist(state))
-    {
-        state_print(state);
-        char buf[16];
-        move_to_string(move, buf);
-        printf("%s\n", buf);
-        exit(1);
-    }
-    */
 
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
 }
@@ -477,26 +479,36 @@ void move_unmake(state_t *state, move_t *move)
     /* Update "occupied" with the same piece as above. */
     state->occupied[state->turn] ^= move->to_square;
     
-    if (move->from_piece == KING)
+    uint64_t left_castle, right_castle;
+
+    switch (move->from_piece)
     {
-        /* TODO: This can be made more efficient by caching more stuff..
-         * We could first see if the move was >1 step (one bitwise and and one lookup),
-         * then we could have a cache element where cached[to_square] gives the place where
-         * the rook should be positioned (one bitwise xor and one lookup). */
+        case PAWN:
+        case KNIGHT:
+        case BISHOP:
+        case QUEEN:
+            break;
 
-        uint64_t left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
-        if ((left_castle << 2) & move->to_square)
-        {
-            state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
-            state->occupied[state->turn] ^= left_castle | left_castle << 3;
-        }
+        case KING:
+            /* TODO: This can be made more efficient by caching more stuff..
+            * We could first see if the move was >1 step (one bitwise and and one lookup),
+            * then we could have a cache element where cached[to_square] gives the place where
+            * the rook should be positioned (one bitwise xor and one lookup). */
 
-        uint64_t right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
-        if ((right_castle >> 1) & move->to_square)
-        {
-            state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
-            state->occupied[state->turn] ^= right_castle | right_castle >> 2;
-        }
+            left_castle = cached->castling_availability[state->turn][0][move->from_square_idx];
+            if ((left_castle << 2) & move->to_square)
+            {
+                state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
+                state->occupied[state->turn] ^= left_castle | left_castle << 3;
+            }
+
+            right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
+            if ((right_castle >> 1) & move->to_square)
+            {
+                state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
+                state->occupied[state->turn] ^= right_castle | right_castle >> 2;
+            }
+            break;
     }
     
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];

@@ -1,10 +1,11 @@
-#define _GNU_SOURCE
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "move.h"
 #include "util.h"
 #include "defines.h"
 #include "cache.h"
+#include "hash.h"
 #if defined(__LP64__)
     #include "inline64.h"
 #else
@@ -180,7 +181,7 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
     else
     {
         /* Check each direction and see if there are any blockers. If there are, take the nearest blocker
-         * (might be LSB and might be LSB) and remove the path in the same direction
+         * (might be LSB and might be MSB) and remove the path in the same direction
          * with the blocker as source this time. */
         if (piece == BISHOP || piece == QUEEN)
         {
@@ -302,12 +303,14 @@ void move_make(state_t *state, move_t *move)
     /* Save some data for unmake_move */
     move->castling = state->castling;
     move->en_passant = state->en_passant;
+    move->zobrist = state->zobrist;
 
     int opponent = 1 - state->turn;
 
     /* Remove the piece that moved from the board. */
     state->pieces[state->turn][move->from_piece] ^= move->from_square;
     state->occupied[state->turn] ^= move->from_square;
+    state->zobrist ^= hash_zobrist->pieces[state->turn][move->from_piece][move->from_square_idx];
 
     /* If it is a capture, we need to remove the opponent piece as well. */
     if (move->capture >= 0)
@@ -316,35 +319,46 @@ void move_make(state_t *state, move_t *move)
         if (state->castling & move->to_square)
         {
             state->castling &= ~move->to_square;
+            state->zobrist ^= hash_zobrist->castling[move->to_square_idx];
         }
 
         uint64_t to_remove_square = move->to_square;
+        int to_remove_square_idx = move->to_square_idx;
+
         if (move->from_piece == PAWN && move->to_square & state->en_passant)
         {
             /* The piece captured with en passant; we need to clear the board of the captured piece.
                 * We simply use the pawn move square of the opponent to find out which square to clear. */
             to_remove_square = cached->moves_pawn_one[opponent][move->to_square_idx];
+            to_remove_square_idx = LSB(to_remove_square);
         }
 
         /* Remove the captured piece off the board. */
         state->pieces[opponent][move->capture] ^= to_remove_square;
         state->occupied[opponent] ^= to_remove_square;
+        state->zobrist ^= hash_zobrist->pieces[opponent][move->capture][to_remove_square_idx];
     }
 
     /* Update the board with the new position of the piece. */
     if (move->promotion >= 0)
     {
         state->pieces[state->turn][move->promotion] ^= move->to_square;
+        state->zobrist ^= hash_zobrist->pieces[state->turn][move->promotion][move->to_square_idx];
     }
     else
     {
         state->pieces[state->turn][move->from_piece] ^= move->to_square;
+        state->zobrist ^= hash_zobrist->pieces[state->turn][move->from_piece][move->to_square_idx];
     }
 
     /* Update "occupied" with the same piece as above. */
     state->occupied[state->turn] ^= move->to_square;
     
-    state->en_passant = 0;
+    if (state->en_passant)
+    {
+        state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
+        state->en_passant = 0;
+    }
 
     if (move->from_piece == KING)
     {
@@ -358,6 +372,9 @@ void move_make(state_t *state, move_t *move)
         {
             state->pieces[state->turn][ROOK] ^= left_castle | left_castle << 3;
             state->occupied[state->turn] ^= left_castle | left_castle << 3;
+
+            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 1];
+            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx - 4];
         }
 
         uint64_t right_castle = cached->castling_availability[state->turn][1][move->from_square_idx];
@@ -365,8 +382,18 @@ void move_make(state_t *state, move_t *move)
         {
             state->pieces[state->turn][ROOK] ^= right_castle | right_castle >> 2;
             state->occupied[state->turn] ^= right_castle | right_castle >> 2;
+
+            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 1];
+            state->zobrist ^= hash_zobrist->pieces[state->turn][ROOK][move->from_square_idx + 3];
         }
 
+        uint64_t castling = state->castling & cached->castling_by_color[state->turn];
+        while (castling)
+        {
+            int castling_idx = LSB(castling);
+            castling &= castling - 1;
+            state->zobrist ^= hash_zobrist->castling[castling_idx];
+        }
         /* Clear the appropriate castling availability. */
         state->castling &= ~cached->castling_by_color[state->turn];
 
@@ -374,7 +401,11 @@ void move_make(state_t *state, move_t *move)
     else if (move->from_piece == ROOK)
     {
         /* Clear the appropriate castling availability. */
-        state->castling &= ~move->from_square;
+        if (state->castling & move->from_square)
+        {
+            state->castling &= ~move->from_square;
+            state->zobrist ^= hash_zobrist->castling[move->from_square_idx];
+        }
     }
     else if (move->from_piece == PAWN)
     {
@@ -382,10 +413,24 @@ void move_make(state_t *state, move_t *move)
         if (~cached->moves_pawn_one[state->turn][move->from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][move->from_square_idx])
         {
             state->en_passant = cached->moves_pawn_one[state->turn][move->from_square_idx];
+            state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
         }
     }
     
     state->turn ^= 1;
+    state->zobrist ^= hash_zobrist->turn;
+
+    /*
+    if (state->zobrist != hash_make_zobrist(state))
+    {
+        state_print(state);
+        char buf[16];
+        move_to_string(move, buf);
+        printf("%s\n", buf);
+        exit(1);
+    }
+    */
+
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
 }
 
@@ -394,6 +439,7 @@ void move_unmake(state_t *state, move_t *move)
     /* Save some data for unmake_move */
     state->castling = move->castling;
     state->en_passant = move->en_passant;
+    state->zobrist = move->zobrist;
 
     int opponent = state->turn;
     state->turn ^= 1;

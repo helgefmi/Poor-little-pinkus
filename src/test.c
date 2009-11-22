@@ -21,9 +21,8 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         return res;
     }
 
-    uint64_t zobrist_key = hash_make_zobrist(state);
-    hash_node_t *hash_node = hash_get_node(zobrist_key);
-    if (hash_node->hash == zobrist_key && hash_node->depth == depth)
+    hash_node_t *hash_node = hash_get_node(state->zobrist);
+    if (hash_node->hash == state->zobrist && hash_node->depth == depth)
     {
         ++_cache_hits;
         return hash_node->score;
@@ -64,7 +63,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         move_unmake(state, &moves[i]);
     }
 
-    hash_add_node(zobrist_key, nodes, depth);
+    hash_add_node(state->zobrist, nodes, depth);
 
     return nodes;
 }

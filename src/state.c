@@ -7,6 +7,7 @@
 #include "cache.h"
 #include "defines.h"
 #include "util.h"
+#include "hash.h"
 
 void state_init_from_fen(state_t *state, char *fen)
 {
@@ -95,6 +96,7 @@ void state_init_from_fen(state_t *state, char *fen)
         state->en_passant = (1ull << square_idx);
     }
 
+    state->zobrist = hash_make_zobrist(state);
     /* TODO: Halfmove and Fullmove numbers from FEN. */
 }
 

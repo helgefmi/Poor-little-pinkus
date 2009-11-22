@@ -12,7 +12,7 @@ typedef struct
     int promotion;
 
     /* Used for unmake_move */
-    uint64_t castling, en_passant;
+    uint64_t castling, en_passant, zobrist;
 } move_t;
 
 void move_to_string(move_t*, char*);

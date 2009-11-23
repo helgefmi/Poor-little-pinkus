@@ -40,15 +40,20 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
     int count = 0;
 
     move_generate_moves(state, moves, &count);
+
+    assert(count >= 0);
+
     qsort(moves, count, sizeof(move_t), cmp_sort_captures);
 
-    int i;
+    int i, legal_move = 0;
     for (i = 0; i < count; ++i)
     {
         move_make(state, &moves[i]);
 
         if (!move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn))
         {
+            legal_move = 1;
+
             int eval = -search_ab(state, depth + 1, max_depth, -beta, -alpha);
 
             if (eval >= beta)
@@ -71,7 +76,7 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
         move_unmake(state, &moves[i]);
     }
 
-    if (!count)
+    if (!legal_move)
     {
         int mate = move_is_attacked(state, state->pieces[state->turn][KING],  1 - state->turn);
         return mate ? -INF + 1: -10;

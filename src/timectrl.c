@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "timectrl.h"
 #include "search.h"
+#include "uci.h"
 
 timecontrol_t timecontrol;
 

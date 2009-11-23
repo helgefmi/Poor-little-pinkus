@@ -33,6 +33,7 @@ void uci_input()
     uci_debug("Getting input..");
 
     char buf[4096];
+
     if (!fgets(buf, 4096, stdin))
     {
         uci_debug("fgets returned 0..");

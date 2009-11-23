@@ -14,6 +14,7 @@
 #define DEFAULT_HASH_SIZE 128
 #define MAX_HASH_SIZE 512
 
+static int uci_active = 0;
 static state_t *uci_state = 0;
 static FILE *uci_logfile;
 
@@ -22,7 +23,8 @@ void uci_start()
     uci_logfile = fopen("/home/helge/output.txt", "w");
     uci_state = malloc(sizeof(state_t));
 
-    while (1)
+    uci_active = 1;
+    while (uci_active)
     {
         uci_input();
     }
@@ -37,11 +39,20 @@ void uci_input()
     if (!fgets(buf, 4096, stdin))
     {
         uci_debug("fgets returned 0..");
-        exit(1);
+        uci_quit();
     }
+    else
+    {
+        char *cmd = util_trim_str(buf);
+        uci_parse_cmd(cmd);
+    }
+}
 
-    char *cmd = util_trim_str(buf);
-    uci_parse_cmd(cmd);
+void uci_quit()
+{
+    free(uci_state);
+    fclose(uci_logfile);
+    uci_active = 0;
 }
 
 void uci_parse_cmd(char *cmd)
@@ -50,7 +61,7 @@ void uci_parse_cmd(char *cmd)
 
     if (!strcmp(cmd, "quit"))
     {
-        exit(0);
+        uci_quit();
     }
     else if (!strcmp(cmd, "stop"))
     {

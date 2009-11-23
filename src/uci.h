@@ -11,6 +11,7 @@ void uci_init_position(char*);
 void uci_set_hash_size(int);
 void uci_go(char*);
 void uci_bestmove();
+void uci_quit();
 
 void uci_debug(char*);
 #endif

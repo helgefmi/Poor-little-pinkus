@@ -25,6 +25,8 @@ static void _init_zobrist()
     /* Initializes the random values we'll use for making zobrist keys.
      * Different srand seeds will give different results */
 
+    memset(hash_zobrist, 0, sizeof(hash_zobrist_t));
+
     int piece, color, idx;
     for (color = WHITE; color <= BLACK; ++color)
     {

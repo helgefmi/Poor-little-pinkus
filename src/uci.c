@@ -14,6 +14,7 @@
 #include "move.h"
 
 #define DEFAULT_HASH_SIZE 128
+#define MAX_HASH_SIZE 512
 
 static int uci_childpid = 0;
 static state_t *uci_state = 0;
@@ -24,7 +25,6 @@ void uci_start()
     uci_logfile = fopen("/home/helge/output.txt", "w");
 
     uci_debug("Starting..");
-    uci_set_hash_size(DEFAULT_HASH_SIZE);
     while (1)
     {
         uci_debug("Getting input..");
@@ -35,7 +35,7 @@ void uci_start()
 void uci_input()
 {
     char buf[4096];
-    if (0 == fgets(buf, 4096, stdin))
+    if (!fgets(buf, 4096, stdin))
     {
         uci_debug("fgets returned 0..");
         uci_quit();
@@ -49,42 +49,48 @@ void uci_input()
 
 void uci_parse_cmd(char *cmd)
 {
-    if (0 == strcmp(cmd, "quit"))
+    if (!strcmp(cmd, "quit"))
     {
         uci_quit();
     }
-    else if (0 == strcmp(cmd, "stop"))
+    else if (!strcmp(cmd, "stop"))
     {
+        uci_debug("Halting search because I got 'stop'");
         uci_halt_search();
     }
-    else if (0 == strcmp(cmd, "isready"))
+    else if (!strcmp(cmd, "isready"))
     {
         printf("readyok\n");
         fflush(stdout);
     }
-    else if (0 == memcmp(cmd, "setoption name Hash value ", strlen("setoption name Hash value ")))
+    else if (!memcmp(cmd, "setoption name Hash value ", strlen("setoption name Hash value ")))
     {
         int value = atoi(cmd + strlen("setoption name Hash value "));
         uci_set_hash_size(value);
     }
-    else if (0 == strcmp(cmd, "ucinewgame"))
+    else if (!strcmp(cmd, "ucinewgame"))
     {
+        uci_debug("Halting search because I got 'ucinewgame'");
         uci_halt_search();
         uci_new_game();
     }
-    else if (0 == memcmp(cmd, "go", 2))
+    else if (!memcmp(cmd, "go", 2))
     {
         uci_go();
     }
-    else if (0 == memcmp(cmd, "position", 8))
+    else if (!memcmp(cmd, "position", 8))
     {
+        uci_debug("Halting search because I got 'position'");
+        uci_halt_search();
+
         uci_init_position(cmd + 9);
     }
-    else if (0 == strcmp(cmd, "uci"))
+    else if (!strcmp(cmd, "uci"))
     {
         printf("id name Poor little Pinkus\n");
         printf("id author Helge Milde\n");
-        printf("option name Hash type spin default 128 min 1 max 512\n");
+        printf("option name Hash type spin default %d min 1 max %d\n", DEFAULT_HASH_SIZE, MAX_HASH_SIZE);
+        uci_set_hash_size(DEFAULT_HASH_SIZE);
         printf("uciok\n");
         fflush(stdout);
     }
@@ -97,6 +103,7 @@ void uci_quit()
         uci_debug("Sending SIGKILL to childpid");
         kill(uci_childpid, SIGKILL);
         wait(0);
+        uci_childpid = 0;
     }
     uci_debug("Quitting..");
     exit(0);
@@ -119,12 +126,13 @@ void uci_halt_search()
 
 void uci_bestmove()
 {
+    /* This function should only be called from the child of the main UCI process. */
     if (!search_best_move)
     {
         uci_debug("search_best_move == 0??");
     }
 
-    if (0 == search_best_move || 0 == search_best_move->depth)
+    if (!search_best_move || !search_best_move->depth)
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
         printf("bestmove 000\n");
@@ -164,12 +172,6 @@ void uci_init_position(char *position)
     uci_debug("Initializing a position:");
     uci_debug(position);
 
-    if (uci_childpid)
-    {
-        uci_debug("Halting search in init_position");
-        uci_halt_search();
-    }
-
     uci_free_stuff();
 
     char word[4096];
@@ -178,11 +180,11 @@ void uci_init_position(char *position)
     sscanf(position, "%s", word);
     position += strlen(word) + 1;
 
-    if (0 == strcmp(word, "startpos"))
+    if (!strcmp(word, "startpos"))
     {
         state_init_from_fen(uci_state, FEN_INIT);
     }
-    else if (0 == strcmp(word, "fen"))
+    else if (!strcmp(word, "fen"))
     {
         int used_chars = state_init_from_fen(uci_state, position);
         position += used_chars;
@@ -199,7 +201,7 @@ void uci_init_position(char *position)
         position += strlen(word) + 1;
 
         uci_debug(word);
-        if (0 == strcmp(word, "moves"))
+        if (!strcmp(word, "moves"))
         {
             while (position[0])
             {
@@ -231,19 +233,12 @@ void uci_debug(char *str)
     fflush(uci_logfile);
 }
 
-static void uci_sigquit(int n)
-{
-    n = 0;
-    uci_debug("Got SIGQUIT");
-    exit(66);
-}
-
 static void uci_sigusr1(int n)
 {
     n = 0;
     uci_debug("Got SIGUSR1");
     uci_bestmove();
-    exit(77);
+    exit(0);
 }
 
 void uci_go()
@@ -258,13 +253,12 @@ void uci_go()
             uci_quit();
             break;
         case 0:
-            signal(SIGQUIT, uci_sigquit);
             signal(SIGUSR1, uci_sigusr1);
-            search_go(uci_state, 6);
+            search_go(uci_state, 7);
             uci_debug("Child ended. Giving out my best move.");
             uci_bestmove();
             uci_childpid = 0;
-            exit(55);
+            exit(0);
             break;
         default:
             break;

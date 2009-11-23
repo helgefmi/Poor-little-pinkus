@@ -1,6 +1,7 @@
 #ifndef _TIMECTRL_H
 #define _TIMECTRL_H
 
+#include <sys/time.h>
 #include "state.h"
 
 typedef struct

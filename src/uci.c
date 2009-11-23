@@ -3,86 +3,81 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/wait.h>
 #include "uci.h"
 #include "util.h"
 #include "hash.h"
 #include "defines.h"
 #include "search.h"
 #include "move.h"
+#include "timectrl.h"
 
 #define DEFAULT_HASH_SIZE 128
 #define MAX_HASH_SIZE 512
 
-static int uci_childpid = 0;
 static state_t *uci_state = 0;
 static FILE *uci_logfile;
 
 void uci_start()
 {
     uci_logfile = fopen("/home/helge/output.txt", "w");
+    uci_state = malloc(sizeof(state_t));
 
-    uci_debug("Starting..");
     while (1)
     {
-        uci_debug("Getting input..");
         uci_input();
     }
 }
 
 void uci_input()
 {
+    uci_debug("Getting input..");
+
     char buf[4096];
     if (!fgets(buf, 4096, stdin))
     {
         uci_debug("fgets returned 0..");
-        uci_quit();
+        exit(1);
     }
 
     char *cmd = util_trim_str(buf);
-    uci_debug(cmd);
-
     uci_parse_cmd(cmd);
 }
 
 void uci_parse_cmd(char *cmd)
 {
+    uci_debug(cmd);
+
     if (!strcmp(cmd, "quit"))
     {
-        uci_quit();
+        exit(0);
     }
     else if (!strcmp(cmd, "stop"))
     {
-        uci_debug("Halting search because I got 'stop'");
         uci_halt_search();
+        uci_bestmove();
     }
     else if (!strcmp(cmd, "isready"))
     {
         printf("readyok\n");
         fflush(stdout);
     }
-    else if (!memcmp(cmd, "setoption name Hash value ", strlen("setoption name Hash value ")))
+    else if (!strncmp(cmd, "setoption name Hash value ", strlen("setoption name Hash value ")))
     {
         int value = atoi(cmd + strlen("setoption name Hash value "));
         uci_set_hash_size(value);
     }
     else if (!strcmp(cmd, "ucinewgame"))
     {
-        uci_debug("Halting search because I got 'ucinewgame'");
         uci_halt_search();
-        uci_new_game();
+        hash_wipe();
     }
-    else if (!memcmp(cmd, "go", 2))
+    else if (!strncmp(cmd, "go", 2))
     {
-        uci_go();
+        uci_go(cmd + 3);
     }
-    else if (!memcmp(cmd, "position", 8))
+    else if (!strncmp(cmd, "position", 8))
     {
-        uci_debug("Halting search because I got 'position'");
         uci_halt_search();
-
         uci_init_position(cmd + 9);
     }
     else if (!strcmp(cmd, "uci"))
@@ -96,52 +91,27 @@ void uci_parse_cmd(char *cmd)
     }
 }
 
-void uci_quit()
-{
-    if (uci_childpid > 0)
-    {
-        uci_debug("Sending SIGKILL to childpid");
-        kill(uci_childpid, SIGKILL);
-        wait(0);
-        uci_childpid = 0;
-    }
-    uci_debug("Quitting..");
-    exit(0);
-}
-
 void uci_halt_search()
 {
-    if (uci_childpid)
+    if (timecontrol.searching)
     {
-        uci_debug("Killing child in halt_search..");
-        kill(uci_childpid, SIGUSR1);
-        wait(0);
-        uci_childpid = 0;
-    }
-    else
-    {
-        uci_debug("Didn't need to kill child in halt_search");
+        uci_debug("Halting search.");
+        timecontrol.searching = 0;
     }
 }
 
 void uci_bestmove()
 {
-    /* This function should only be called from the child of the main UCI process. */
-    if (!search_best_move)
-    {
-        uci_debug("search_best_move == 0??");
-    }
-
-    if (!search_best_move || !search_best_move->depth)
+    if (!search_data.depth)
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
-        printf("bestmove 000\n");
+        printf("resign\n");
         fflush(stdout);
     }
     else
     {
         char buf[16];
-        move_to_string(&search_best_move->move, buf);
+        move_to_string(&search_data.move, buf);
         uci_debug("giving out best move:");
         uci_debug(buf);
         printf("bestmove %s\n", buf);
@@ -149,34 +119,11 @@ void uci_bestmove()
     }
 }
 
-static void uci_free_stuff()
-{
-    if (uci_state)
-    {
-        uci_debug("Freeing uci_state");
-        free(uci_state);
-        uci_state = 0;
-    }
-}
-
-void uci_new_game()
-{
-    uci_debug("Starting new game..");
-    uci_debug("Wiping hash tables..");
-    uci_free_stuff();
-    hash_wipe();
-}
- 
 void uci_init_position(char *position)
 {
-    uci_debug("Initializing a position:");
-    uci_debug(position);
-
-    uci_free_stuff();
+    memset(uci_state, 0, sizeof(state_t));
 
     char word[4096];
-    uci_state = malloc(sizeof(state_t));
-
     sscanf(position, "%s", word);
     position += strlen(word) + 1;
 
@@ -200,13 +147,11 @@ void uci_init_position(char *position)
         sscanf(position, "%s", word);
         position += strlen(word) + 1;
 
-        uci_debug(word);
         if (!strcmp(word, "moves"))
         {
             while (position[0])
             {
                 sscanf(position, "%s", word);
-                uci_debug(word);
                 position += strlen(word) + 1;
 
                 move_t move;
@@ -222,7 +167,6 @@ void uci_init_position(char *position)
 void uci_set_hash_size(int value)
 {
     uci_debug("Setting hash table size..");
-    // uci_debug("Setting hash table size to %dMB (%d entries)\n", value, tsize);
     int tsize = (value * 1024 * 1024) / sizeof(hash_node_t);
     hash_set_tsize(tsize);
 }
@@ -233,34 +177,58 @@ void uci_debug(char *str)
     fflush(uci_logfile);
 }
 
-static void uci_sigusr1(int n)
+void uci_go(char *params)
 {
-    n = 0;
-    uci_debug("Got SIGUSR1");
-    uci_bestmove();
-    exit(0);
-}
+    int wtime = 0, btime = 0,
+        ponder = 0, depth = 0,
+        nodes = 0, infinite = 0;
 
-void uci_go()
-{
-    assert(!uci_childpid);
-
-    uci_debug("Forking for search_go()..");
-    switch (uci_childpid = fork())
+    while (params[0])
     {
-        case -1:
-            perror("fork error");
-            uci_quit();
-            break;
-        case 0:
-            signal(SIGUSR1, uci_sigusr1);
-            search_go(uci_state, 7);
-            uci_debug("Child ended. Giving out my best move.");
-            uci_bestmove();
-            uci_childpid = 0;
-            exit(0);
-            break;
-        default:
-            break;
+        char word[4096];
+        sscanf(params, "%s", word);
+        params += strlen(word) + 1;
+
+        if (!strcmp(word, "wtime"))
+        {
+            sscanf(params, "%s", word);
+            params += strlen(word) + 1;
+            wtime = atoi(word);
+        }
+        else if (!strcmp(word, "btime"))
+        {
+            sscanf(params, "%s", word);
+            params += strlen(word) + 1;
+            btime = atoi(word);
+        }
+        else if (!strcmp(word, "ponder"))
+        {
+            ponder = 1;
+        }
+        else if (!strcmp(word, "depth"))
+        {
+            sscanf(params, "%s", word);
+            params += strlen(word) + 1;
+            depth = atoi(word);
+        }
+        else if (!strcmp(word, "nodes"))
+        {
+            sscanf(params, "%s", word);
+            params += strlen(word) + 1;
+            nodes = atoi(word);
+        }
+        else if (!strcmp(word, "infinite"))
+        {
+            infinite = 1;
+        }
+
+        while (isspace(params[0]))
+        {
+            ++params;
+        }
     }
+
+    timectrl_go(uci_state, wtime, btime, ponder, depth, nodes, infinite);
+
+    uci_bestmove();
 }

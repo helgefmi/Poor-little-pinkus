@@ -3,6 +3,10 @@
 
 #include "state.h"
 
+#define MSCORE_DEFAULT 0
+#define MSCORE_CAPTURE 10
+#define MSCORE_PROMOTION 100
+
 /* Contains all the information of a move on the chess board */
 typedef struct
 {
@@ -10,6 +14,8 @@ typedef struct
     int from_square_idx, to_square_idx;
     int from_piece, capture;
     int promotion;
+
+    int move_score;
 
     /* Used for unmake_move */
     uint64_t castling, en_passant, zobrist;

@@ -9,11 +9,14 @@ typedef struct
     move_t move;
     int score;
     int depth;
-} search_best_move_t;
+    uint64_t nodes;
+} search_data_t;
 
-search_best_move_t *search_best_move;
+extern search_data_t search_data;
 
 void search_go(state_t*, int);
+
+int search_iterative(state_t*, int);
 int search_ab(state_t*, int, int, int, int);
 
 #endif

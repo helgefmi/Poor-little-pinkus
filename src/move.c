@@ -64,6 +64,8 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 int to_square_idx = LSB(to_square);
                 valid_moves &= valid_moves - 1;
                 
+                int move_score = MSCORE_DEFAULT;
+
                 /* Check if it's a capture. If so, set "capture" to the captured piece. */
                 int capture = -1;
                 if (to_square & state->occupied_both)
@@ -72,6 +74,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                     {
                         if (to_square & state->pieces[opponent][capture])
                         {
+                            move_score = MSCORE_CAPTURE + (capture - piece);
                             break;
                         }
                     }
@@ -103,6 +106,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                         moves[*count].from_piece = piece;
                         moves[*count].capture = capture;
                         moves[*count].promotion = promotion;
+                        moves[*count].move_score = move_score + MSCORE_PROMOTION + promotion;
 
                         ++(*count);
                     }
@@ -117,6 +121,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                     moves[*count].from_piece = piece;
                     moves[*count].capture = capture;
                     moves[*count].promotion = -1;
+                    moves[*count].move_score = move_score;
 
                     ++(*count);
                 }

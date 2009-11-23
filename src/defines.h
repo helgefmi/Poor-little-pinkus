@@ -25,6 +25,8 @@
 #define SE 6
 #define SW 7
 
+#define INF 99999999
+
 /* A1 - H8 {{{ */
 #define A1 1ull << 0
 #define B1 1ull << 1

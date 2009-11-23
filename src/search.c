@@ -5,6 +5,13 @@
 #include "eval.h"
 #include "defines.h"
 
+int cmp_sort_captures(const void* a, const void* b)
+{
+    const move_t* move_a = (const move_t*) a;
+    const move_t* move_b = (const move_t*) b;
+    return ((int)move_b->capture - (int)move_b->from_piece) - ((int)move_a->capture - (int)move_a->from_piece);
+}
+
 void search_go(state_t *state, int max_depth)
 {
     assert(max_depth > 0);
@@ -31,6 +38,7 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
     int count = 0;
 
     move_generate_moves(state, moves, &count);
+    qsort(moves, count, sizeof(move_t), cmp_sort_captures);
 
     int i, have_moved = 0;
     for (i = 0; i < count; ++i)

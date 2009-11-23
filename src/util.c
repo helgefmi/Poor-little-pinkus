@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -22,6 +23,47 @@ int util_char_to_color(char piece_c)
     return isupper(piece_c) ? WHITE : BLACK;
 }
 
+void util_chars_to_move(char *move_str, move_t *move, state_t *state)
+{
+    move->from_square_idx = util_chars_to_square(move_str);
+    move->from_square = (1ull << move->from_square_idx);
+    move_str += 2;
+    move->to_square_idx = util_chars_to_square(move_str);
+    move->to_square = (1ull << move->to_square_idx);
+    move_str += 2;
+
+    move->promotion = -1;
+    if (move_str[0])
+    {
+        move->promotion = util_char_to_piece(move_str[0]);
+    }
+
+    move->capture = -1;
+    move->from_piece = -1;
+
+    int color, piece;
+    for (color = WHITE; color <= BLACK; ++color)
+    {
+        for (piece = PAWN; piece <= KING; ++piece)
+        {
+            if (state->pieces[color][piece] & move->from_square)
+            {
+                move->from_piece = piece;
+            }
+            if (state->pieces[color][piece] & move->to_square)
+            {
+                move->capture = piece; 
+            }
+        }
+    }
+
+    assert(move->from_piece >= 0);
+
+    if (move->from_piece == PAWN && move->to_square & state->en_passant)
+    {
+        move->capture = PAWN;
+    }
+}
 
 void util_square_to_chars(uint64_t square, char *out)
 {
@@ -32,10 +74,10 @@ void util_square_to_chars(uint64_t square, char *out)
     out[1] = '0' + (char)y;
 }
 
-uint64_t util_chars_to_square(char *move_str)
+int util_chars_to_square(char *move_str)
 {
     /* Converts a character representation of a move (A2) to its index (8). */
-    uint64_t x = (int)(tolower(move_str[0]) - 'a'),
+    int x = (int)(tolower(move_str[0]) - 'a'),
         y = (int)(move_str[1] - '0') - 1;
 
     return y * 8 + x;

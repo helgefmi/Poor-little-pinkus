@@ -188,8 +188,6 @@ void uci_init_position(char *position)
         position += used_chars;
     }
 
-    state_print(uci_state);
-
     while (isspace(position[0]))
     {
         ++position;
@@ -197,10 +195,26 @@ void uci_init_position(char *position)
 
     if (position[0])
     {
+        sscanf(position, "%s", word);
+        position += strlen(word) + 1;
 
-        uci_debug("Unused part of newposition:");
-        uci_debug(position);
+        uci_debug(word);
+        if (0 == strcmp(word, "moves"))
+        {
+            while (position[0])
+            {
+                sscanf(position, "%s", word);
+                uci_debug(word);
+                position += strlen(word) + 1;
+
+                move_t move;
+                util_chars_to_move(word, &move, uci_state);
+                move_make(uci_state, &move);
+            }
+        }
     }
+
+    state_print(uci_state);
 }
 
 void uci_set_hash_size(int value)
@@ -246,7 +260,7 @@ void uci_go()
         case 0:
             signal(SIGQUIT, uci_sigquit);
             signal(SIGUSR1, uci_sigusr1);
-            search_go(uci_state, 7);
+            search_go(uci_state, 6);
             uci_debug("Child ended. Giving out my best move.");
             uci_bestmove();
             uci_childpid = 0;

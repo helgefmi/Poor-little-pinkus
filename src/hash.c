@@ -93,17 +93,61 @@ void hash_set_tsize(int size)
     memset(hash_table, 0, sizeof(hash_node_t) * _hash_table_size);
 }
 
-void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth)
+int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
 {
+    hash_node_t *entry = hash_get_node(zobrist_key);
+    if (!entry || entry->depth < depth || entry->hash != zobrist_key)
+    {
+        return 0;
+    }
+
+    if (entry->type == HASH_EXACT)
+    {
+        *score = entry->score;
+        return 1;
+    }
+    else if (entry->type == HASH_ALPHA)
+    {
+        if (entry->score <= alpha)
+        {
+            *score = alpha;
+            return 1;
+        }
+    }
+    else if (entry->type == HASH_BETA)
+    {
+        if (entry->score >= beta)
+        {
+            *score = beta;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type)
+{
+    if (!_hash_table_size)
+    {
+        return;
+    }
+
     int idx = zobrist_key % _hash_table_size;
 
     hash_table[idx].hash = zobrist_key;
     hash_table[idx].depth = depth;
     hash_table[idx].score = score;
+    hash_table[idx].type = type;
 }
 
 hash_node_t *hash_get_node(uint64_t zobrist_key)
 {
+    if (!_hash_table_size)
+    {
+        return NULL;
+    }
+
     /* The returned node must be checked to see if the zobrist keys are matching. */
     int idx = zobrist_key % _hash_table_size;
     return &hash_table[idx];

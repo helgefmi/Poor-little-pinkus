@@ -60,7 +60,7 @@ void timectrl_alarm(int n)
 
     if (search_data.pv[0].depth > 0)
     {
-        printf(" depth %d score %d time %d pv", search_data.pv[0].depth, search_data.pv[0].score, (int)spent_time * 1000);
+        printf(" depth %d score cp %.2f time %d pv", search_data.pv[0].depth, (float)search_data.pv[0].score / 100, (int)spent_time * 1000);
 
         int i;
         for (i = 0; i < 128; ++i)
@@ -75,6 +75,8 @@ void timectrl_alarm(int n)
             printf(" %s", buf);
         }
     }
+
+    printf(" cachehits %d cachemisses %d", search_data.cache_hits, search_data.cache_misses);
 
     printf("\n");
     fflush(stdout);

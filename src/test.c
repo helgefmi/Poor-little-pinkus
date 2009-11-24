@@ -22,14 +22,18 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     }
 
     hash_node_t *hash_node = hash_get_node(state->zobrist);
-    if (hash_node->hash == state->zobrist && hash_node->depth == depth)
+    /* Check if hashing is enabled */
+    if (hash_node)
     {
-        ++_cache_hits;
-        return hash_node->score;
-    }
-    else
-    {
-        ++_cache_misses;
+        if (hash_node->hash == state->zobrist && hash_node->depth == depth)
+        {
+            ++_cache_hits;
+            return hash_node->score;
+        }
+        else
+        {
+            ++_cache_misses;
+        }
     }
 
     move_t moves[100];
@@ -63,7 +67,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         move_unmake(state, &moves[i]);
     }
 
-    hash_add_node(state->zobrist, nodes, depth);
+    hash_add_node(state->zobrist, nodes, depth, 0);
 
     return nodes;
 }
@@ -83,9 +87,8 @@ void test_perft(state_t *state, int depth, int divide)
     spent_time = now.tv_sec - start_time.tv_sec;
     spent_time *= 1000000;
     spent_time += (now.tv_usec - start_time.tv_usec);
-    spent_time /= 1000000.0;
 
-    printf("Time: %f, Nodes: %llu, nps: %f\n", spent_time, total_nodes, total_nodes/spent_time);
+    printf("Time: %f, Nodes: %llu, nps: %.2fM\n", spent_time, total_nodes, total_nodes/spent_time);
     printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }
 
@@ -149,9 +152,8 @@ void test_perftsuite(int max_depth)
         double spent_time = now.tv_sec - start_time.tv_sec;
         spent_time *= 1000000;
         spent_time += (now.tv_usec - start_time.tv_usec);
-        spent_time /= 1000000.0;
 
-        printf("\tnps=%f\n", total_nodes / spent_time);
+        printf("\tnps=%.2fM\n", total_nodes / spent_time);
     }
 
     fclose(file);
@@ -161,7 +163,7 @@ void test_perftsuite(int max_depth)
     double total_time = now.tv_sec - start_time.tv_sec;
     total_time *= 1000000;
     total_time += (now.tv_usec - start_time.tv_usec);
-    total_time /= 1000000.0;
-    printf("%llu nodes in %.2f seconds with nps=%f\n", total_nodes, total_time, total_nodes / total_time);
+
+    printf("%llu nodes in %.2f seconds with nps=%.2fM\n", total_nodes, total_time, total_nodes / total_time);
     printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }

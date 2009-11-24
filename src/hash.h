@@ -1,6 +1,10 @@
 #ifndef _HASHING_H
 #define _HASHING_H
 
+#define HASH_EXACT 0
+#define HASH_ALPHA 1
+#define HASH_BETA 2
+
 #include <stdint.h>
 #include "state.h"
 
@@ -18,8 +22,9 @@ typedef struct {
 typedef struct 
 {
     uint64_t hash;
-    uint64_t score;
+    int score;
     int depth;
+    int type;
 } hash_node_t;
 
 hash_zobrist_t *hash_zobrist;
@@ -28,10 +33,11 @@ void hash_init();
 void hash_destroy();
 void hash_set_tsize(int);
 void hash_wipe();
+int hash_probe(uint64_t, int, int, int, int*);
 
 uint64_t hash_make_zobrist(state_t*);
 
-void hash_add_node(uint64_t, uint64_t, int);
+void hash_add_node(uint64_t, uint64_t, int, int);
 hash_node_t *hash_get_node(uint64_t);
 
 #endif

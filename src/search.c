@@ -64,7 +64,8 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta, int
             else if (eval > alpha)
             {
                 alpha = eval;
-                memcpy(&search_data.pv[depth].move, &moves[depth], sizeof(move_t));
+
+                memcpy(&search_data.pv[depth].move, &moves[i], sizeof(move_t));
                 search_data.pv[depth].score = eval;
                 search_data.pv[depth].depth = max_depth;
             }

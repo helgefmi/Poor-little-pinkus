@@ -24,12 +24,12 @@ void search_go(state_t *state, int max_depth)
 
 int search_iterative(state_t *state, int max_depth)
 {
-    return search_ab(state, 0, max_depth, -INF, INF);
+    return search_ab(state, 0, max_depth, -INF, INF, 1);
 }
 
-int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
+int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta, int is_pv)
 {
-    ++search_data.nodes;
+    ++search_data.visited_nodes;
 
     if (depth == max_depth)
     {
@@ -54,7 +54,7 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
         {
             legal_move = 1;
 
-            int eval = -search_ab(state, depth + 1, max_depth, -beta, -alpha);
+            int eval = -search_ab(state, depth + 1, max_depth, -beta, -alpha, is_pv);
 
             if (eval >= beta)
             {
@@ -64,12 +64,9 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
             else if (eval > alpha)
             {
                 alpha = eval;
-                if (depth == 0)
-                {
-                    memcpy(&search_data.move, &moves[i], sizeof(move_t));
-                    search_data.score = eval;
-                    search_data.depth = max_depth;
-                }
+                memcpy(&search_data.pv[depth].move, &moves[depth], sizeof(move_t));
+                search_data.pv[depth].score = eval;
+                search_data.pv[depth].depth = max_depth;
             }
         }
 
@@ -79,7 +76,7 @@ int search_ab(state_t *state, int depth, int max_depth, int alpha, int beta)
     if (!legal_move)
     {
         int mate = move_is_attacked(state, state->pieces[state->turn][KING],  1 - state->turn);
-        return mate ? -INF + 1: -10;
+        return mate ? -INF + depth: -10;
     }
 
     return alpha;

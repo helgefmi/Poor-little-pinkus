@@ -55,15 +55,25 @@ void timectrl_alarm(int n)
     spent_time += (now.tv_usec - timecontrol.start_time.tv_usec);
     spent_time /= 1000000.0;
 
-    char buf[16];
-    move_to_string(&search_data.move, buf);
+    printf("info nodes %llu nps %d",
+        search_data.visited_nodes, (int)(search_data.visited_nodes / spent_time));
 
-    printf("info depth %d nodes %llu score %d nps %d",
-        search_data.depth, search_data.nodes, search_data.score, (int)(search_data.nodes / spent_time));
-
-    if (search_data.depth > 0)
+    if (search_data.pv[0].depth > 0)
     {
-        printf(" time %d pv %s", (int)spent_time * 1000, buf);
+        printf(" depth %d score %d time %d pv", search_data.pv[0].depth, search_data.pv[0].score, (int)spent_time * 1000);
+
+        int i;
+        for (i = 0; i < 128; ++i)
+        {
+            char buf[16];
+            if (!search_data.pv[i].depth)
+            {
+                break;
+            }
+
+            move_to_string(&search_data.pv[i].move, buf);
+            printf(" %s", buf);
+        }
     }
 
     printf("\n");

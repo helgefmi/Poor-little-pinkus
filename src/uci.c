@@ -114,7 +114,7 @@ void uci_halt_search()
 
 void uci_bestmove()
 {
-    if (!search_data.depth)
+    if (search_data.pv[0].depth <= 0)
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
         printf("resign\n");
@@ -123,7 +123,7 @@ void uci_bestmove()
     else
     {
         char buf[16];
-        move_to_string(&search_data.move, buf);
+        move_to_string(&search_data.pv[0].move, buf);
         uci_debug("giving out best move:");
         uci_debug(buf);
         printf("bestmove %s\n", buf);

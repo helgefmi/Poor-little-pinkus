@@ -15,7 +15,7 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, in
 
     if (!depth)
     {
-        depth = 7;
+        depth = 8;
     }
 
     timecontrol.wtime = wtime;

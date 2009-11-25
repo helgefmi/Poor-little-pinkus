@@ -64,7 +64,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 int to_square_idx = LSB(to_square);
                 valid_moves &= valid_moves - 1;
                 
-                int move_score = MSCORE_DEFAULT;
+                int move_score = MSCORE_DEFAULT - piece;
 
                 /* Check if it's a capture. If so, set "capture" to the captured piece. */
                 int capture = -1;

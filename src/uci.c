@@ -117,7 +117,7 @@ void uci_bestmove()
     if (search_data.pv[0].depth <= 0)
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
-        printf("resign\n");
+        printf("bestmove 0000\n");
         fflush(stdout);
     }
     else

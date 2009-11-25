@@ -23,7 +23,7 @@ extern search_data_t search_data;
 
 void search_go(state_t*, int);
 
-int search_iterative(state_t*, int);
+void search_iterative(state_t*, int);
 int search_ab(state_t*, int, int, int);
 
 #endif

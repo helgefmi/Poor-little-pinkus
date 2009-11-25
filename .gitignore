@@ -2,3 +2,6 @@
 *~
 *.swp
 plp
+plp.exe
+polyglot*
+xboard.debug

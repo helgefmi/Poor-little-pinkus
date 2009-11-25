@@ -21,10 +21,14 @@ void search_go(state_t *state, int max_depth)
     search_iterative(state, max_depth);
 }
 
-int search_iterative(state_t *state, int max_depth)
+void search_iterative(state_t *state, int max_depth)
 {
-    search_data.max_depth = max_depth;
-    return search_ab(state, max_depth, -INF, INF);
+    int ply;
+    for (ply = 1; ply <= max_depth; ++ply)
+    {
+        search_data.max_depth = ply;
+        search_ab(state,ply, -INF, INF);
+    }
 }
 
 int search_ab(state_t *state, int depth, int alpha, int beta)

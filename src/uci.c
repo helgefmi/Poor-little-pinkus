@@ -240,7 +240,7 @@ void uci_go(char *params)
         }
     }
 
-    timectrl_go(uci_state, wtime, btime, ponder, depth, nodes, infinite);
+    timectrl_go(uci_state, wtime, btime, ponder, depth, nodes, infinite, 1);
 
     uci_bestmove();
 }

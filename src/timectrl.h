@@ -15,11 +15,12 @@ typedef struct
     int nodes;
     int infinite;
     int search_time_left;
+    int verbose;
     struct timeval start_time;
 } timecontrol_t;
 
 extern timecontrol_t timecontrol;
-void timectrl_go(state_t*, int, int, int, int, int, int);
+void timectrl_go(state_t*, int, int, int, int, int, int, int);
 void timectrl_alarm(int);
 
 #endif

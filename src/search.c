@@ -27,7 +27,7 @@ void search_iterative(state_t *state, int max_depth)
     for (ply = 1; ply <= max_depth; ++ply)
     {
         search_data.max_depth = ply;
-        search_ab(state,ply, -INF, INF);
+        search_ab(state, ply, -INF, INF);
     }
 }
 

@@ -96,12 +96,16 @@ void hash_set_tsize(int size)
 int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
 {
     hash_node_t *entry = hash_get_node(zobrist_key);
-    if (!entry || entry->depth < depth || entry->hash != zobrist_key)
+    if (!entry || entry->hash != zobrist_key)
     {
         return 0;
     }
 
-    if (entry->type == HASH_EXACT)
+    if (entry->depth < depth )
+    {
+        return 0;
+    }
+    else if (entry->type == HASH_EXACT)
     {
         *score = entry->score;
         return 1;

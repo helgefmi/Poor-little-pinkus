@@ -9,6 +9,7 @@
 #include "hash.h"
 #include "uci.h"
 #include "eval.h"
+#include "bench.h"
 
 void print_usage()
 {
@@ -26,6 +27,7 @@ void print_usage()
 " -mode perftsuite - Runs through a set of 126 positions and compare the perft\n"
 "                    values by their correct values. Runs with arbitrary depth.\n"
 " -mode uci        - Starts the engine in uci mode.\n\n"
+" -mode bench      - Starts a benchmark for our main search algorithm.\n\n"
 " Anything else prints out this message.\n");
 }
 
@@ -34,6 +36,7 @@ void print_usage()
 #define MODE_PERFT 2
 #define MODE_DIVIDE 3
 #define MODE_PERFTSUITE 4
+#define MODE_BENCH 5
 
 int main(int argc, char **argv)
 {
@@ -76,6 +79,10 @@ int main(int argc, char **argv)
             {
                 mode = MODE_UCI;
             }
+            else if (0 == strcmp(argv[i], "bench"))
+            {
+                mode = MODE_BENCH;
+            }
             else
             {
                 fprintf(stderr, "Invalid mode: %s\n", argv[i]);
@@ -112,6 +119,7 @@ int main(int argc, char **argv)
             state = malloc(sizeof(state_t));
             state_init_from_fen(state, fen);
         case MODE_PERFTSUITE:
+        case MODE_BENCH:
             printf("Initializing hash table with size: %d\n", table_size);
             hash_set_tsize(table_size);
             break;
@@ -135,6 +143,9 @@ int main(int argc, char **argv)
             break;
         case MODE_PRINT_USAGE:
             print_usage();
+            break;
+        case MODE_BENCH:
+            bench_start(0);
             break;
     }
 

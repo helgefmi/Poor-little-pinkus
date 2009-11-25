@@ -88,7 +88,7 @@ void test_perft(state_t *state, int depth, int divide)
     spent_time *= 1000000;
     spent_time += (now.tv_usec - start_time.tv_usec);
 
-    printf("Time: %f, Nodes: %llu, nps: %.2fM\n", spent_time, total_nodes, total_nodes/spent_time);
+    printf("Seconds: %.2f, Nodes: %llu, nps: %.2fM\n", spent_time / 1000000.0, total_nodes, total_nodes/spent_time);
     printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }
 
@@ -164,6 +164,6 @@ void test_perftsuite(int max_depth)
     total_time *= 1000000;
     total_time += (now.tv_usec - start_time.tv_usec);
 
-    printf("%llu nodes in %.2f seconds with nps=%.2fM\n", total_nodes, total_time, total_nodes / total_time);
+    printf("%llu nodes in %.2f seconds with nps=%.2fM\n", total_nodes, total_time / 1000000.0, total_nodes / total_time);
     printf("Cache hits: %llu, Cache misses: %llu\n", _cache_hits, _cache_misses);
 }

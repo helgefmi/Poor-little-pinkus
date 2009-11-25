@@ -9,7 +9,7 @@
 
 timecontrol_t timecontrol;
 
-void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, int nodes, int infinite)
+void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, int nodes, int infinite, int verbose)
 {
     memset(&timecontrol, 0, sizeof(timecontrol_t));
 
@@ -24,6 +24,7 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, in
     timecontrol.depth = depth;
     timecontrol.nodes = nodes;
     timecontrol.infinite = infinite;
+    timecontrol.verbose = verbose;
 
     signal(SIGALRM, timectrl_alarm);
 
@@ -46,40 +47,43 @@ void timectrl_alarm(int n)
     n = 0;
     --timecontrol.search_time_left;
 
-    struct timeval now;
-    gettimeofday(&now, NULL);
-
-    double spent_time;
-    spent_time = now.tv_sec - timecontrol.start_time.tv_sec;
-    spent_time *= 1000000;
-    spent_time += (now.tv_usec - timecontrol.start_time.tv_usec);
-    spent_time /= 1000000.0;
-
-    printf("info nodes %llu nps %d",
-        search_data.visited_nodes, (int)(search_data.visited_nodes / spent_time));
-
-    if (search_data.pv[0].depth > 0)
+    if (timecontrol.verbose)
     {
-        printf(" depth %d score cp %.2f time %d pv", search_data.pv[0].depth, (float)search_data.pv[0].score / 100, (int)spent_time * 1000);
+        struct timeval now;
+        gettimeofday(&now, NULL);
 
-        int i;
-        for (i = 0; i < 128; ++i)
+        double spent_time;
+        spent_time = now.tv_sec - timecontrol.start_time.tv_sec;
+        spent_time *= 1000000;
+        spent_time += (now.tv_usec - timecontrol.start_time.tv_usec);
+        spent_time /= 1000000.0;
+
+        printf("info nodes %llu nps %d",
+            search_data.visited_nodes, (int)(search_data.visited_nodes / spent_time));
+
+        if (search_data.pv[0].depth > 0)
         {
-            char buf[16];
-            if (!search_data.pv[i].depth)
+            printf(" depth %d score cp %.2f time %d pv", search_data.pv[0].depth, (float)search_data.pv[0].score / 100, (int)spent_time * 1000);
+
+            int i;
+            for (i = 0; i < 128; ++i)
             {
-                break;
+                char buf[16];
+                if (!search_data.pv[i].depth)
+                {
+                    break;
+                }
+
+                move_to_string(&search_data.pv[i].move, buf);
+                printf(" %s", buf);
             }
-
-            move_to_string(&search_data.pv[i].move, buf);
-            printf(" %s", buf);
         }
+
+        printf(" cachehits %d cachemisses %d", search_data.cache_hits, search_data.cache_misses);
+
+        printf("\n");
+        fflush(stdout);
     }
-
-    printf(" cachehits %d cachemisses %d", search_data.cache_hits, search_data.cache_misses);
-
-    printf("\n");
-    fflush(stdout);
 
     alarm(1);
 }

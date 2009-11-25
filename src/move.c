@@ -107,6 +107,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                         moves[*count].capture = capture;
                         moves[*count].promotion = promotion;
                         moves[*count].move_score = move_score + MSCORE_PROMOTION + promotion;
+                        moves[*count].move_id = *count;
 
                         ++(*count);
                     }
@@ -122,6 +123,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                     moves[*count].capture = capture;
                     moves[*count].promotion = -1;
                     moves[*count].move_score = move_score;
+                    moves[*count].move_id = *count;
 
                     ++(*count);
                 }

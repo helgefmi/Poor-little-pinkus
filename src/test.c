@@ -67,7 +67,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         move_unmake(state, &moves[i]);
     }
 
-    hash_add_node(state->zobrist, nodes, depth, 0);
+    hash_add_node(state->zobrist, nodes, depth, 0, 0);
 
     return nodes;
 }

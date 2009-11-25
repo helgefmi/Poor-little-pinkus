@@ -16,6 +16,7 @@ typedef struct
     int promotion;
 
     int move_score;
+    int move_id;
 
     /* Used for unmake_move */
     uint64_t castling, en_passant, zobrist;

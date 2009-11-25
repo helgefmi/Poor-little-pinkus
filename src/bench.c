@@ -18,7 +18,7 @@ static char* benchmarks[NUM_BENCHES] = {
 
 int depths[NUM_BENCHES] = {
     8, 8, 11,
-    8, 8, 8
+    8, 8, 7
 };
 
 void bench_start(int increase)
@@ -54,6 +54,6 @@ void bench_start(int increase)
     spent_time *= 1000000;
     spent_time += (now.tv_usec - start_time.tv_usec);
 
-    printf("\n\nTime: %f, Nodes: %llu, nps: %.2fM\n", spent_time / 1000000.0, total_nodes, total_nodes/spent_time);
+    printf("\n\nTime: %f, Nodes: %.2fM, nps: %.2fM\n", spent_time / 1000000.0, total_nodes / 1000000.0, total_nodes/spent_time);
     printf("Cache hitrate: %.2f\n", 100 * (cache_hits / (cache_hits + cache_misses)));
 }

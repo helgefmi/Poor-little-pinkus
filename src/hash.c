@@ -11,7 +11,7 @@
 #endif
 
 static hash_node_t *hash_table;
-static int _hash_table_size;
+static int _hash_mask;
 
 static inline uint64_t _rand64()
 {
@@ -90,18 +90,23 @@ void hash_set_tsize(int memsize)
 
     int tsize = (memsize * 1024 * 1024) / sizeof(hash_node_t);
 
-    _hash_table_size = tsize;
-    hash_table = malloc(sizeof(hash_node_t) * _hash_table_size);
-    memset(hash_table, 0, sizeof(hash_node_t) * _hash_table_size);
+    /* Convert to a power of two */
+    tsize = 1 << MSB(tsize);
+
+    _hash_mask = tsize - 1;
+    hash_table = malloc(sizeof(hash_node_t) * tsize);
+    memset(hash_table, 0, sizeof(hash_node_t) * tsize);
 }
 
-int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
+int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score, int *move)
 {
     hash_node_t *entry = hash_get_node(zobrist_key);
     if (!entry || entry->hash != zobrist_key)
     {
         return 0;
     }
+
+    *move = entry->move;
 
     if (entry->depth < depth )
     {
@@ -132,30 +137,31 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
     return 0;
 }
 
-void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type)
+void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type, int move)
 {
-    if (!_hash_table_size)
+    if (!_hash_mask)
     {
         return;
     }
 
-    int idx = zobrist_key % _hash_table_size;
+    int idx = zobrist_key & _hash_mask;
 
     hash_table[idx].hash = zobrist_key;
     hash_table[idx].depth = depth;
     hash_table[idx].score = score;
     hash_table[idx].type = type;
+    hash_table[idx].move = move;
 }
 
 hash_node_t *hash_get_node(uint64_t zobrist_key)
 {
-    if (!_hash_table_size)
+    if (!_hash_mask)
     {
         return NULL;
     }
 
     /* The returned node must be checked to see if the zobrist keys are matching. */
-    int idx = zobrist_key % _hash_table_size;
+    int idx = zobrist_key & _hash_mask;
     return &hash_table[idx];
 }
 

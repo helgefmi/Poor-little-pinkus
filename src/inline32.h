@@ -4,6 +4,8 @@
      (double-word) X86 instructions.
 */
 
+#include <stdint.h>
+
 static inline int PopCnt(uint64_t word)
 {
 /*  r0=result, %1=tmp, %2=first input, %3=second input */

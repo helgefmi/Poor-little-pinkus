@@ -19,7 +19,7 @@ void print_usage()
 " -fen <fen>       - Sets up plp with an initial position.\n"
 "                    If omitted, the normal initial position in chess is used.\n"
 " -depth <n>       - Sets the depth of perft, divide or perftsuite modes.\n"
-" -tsize <n>       - Sets the hash table size.\n\n"
+" -tsize <n>       - Sets the hash table size (in MB).\n\n"
 " -mode divide     - Runs through every move in a position prints their\n"
 "                    leaf-node counts.\n"
 " -mode perft      - Same as '-mode divide' but will only give one leaf-node\n"
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 {
     char *fen = FEN_INIT;
     int depth = 1;
-    int table_size = 1024;
+    int table_size = 512;
     int mode = MODE_PRINT_USAGE;
 
     int i;

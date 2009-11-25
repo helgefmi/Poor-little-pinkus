@@ -81,14 +81,16 @@ void hash_destroy()
     free(hash_zobrist);
 }
 
-void hash_set_tsize(int size)
+void hash_set_tsize(int memsize)
 {
     if (hash_table)
     {
         free(hash_table);
     }
 
-    _hash_table_size = size;
+    int tsize = (memsize * 1024 * 1024) / sizeof(hash_node_t);
+
+    _hash_table_size = tsize;
     hash_table = malloc(sizeof(hash_node_t) * _hash_table_size);
     memset(hash_table, 0, sizeof(hash_node_t) * _hash_table_size);
 }

@@ -11,8 +11,8 @@
 #include "move.h"
 #include "timectrl.h"
 
-#define DEFAULT_HASH_SIZE 128
-#define MAX_HASH_SIZE 512
+#define DEFAULT_HASH_SIZE 256
+#define MAX_HASH_SIZE 2048
 
 static int uci_active = 0;
 static state_t *uci_state = 0;
@@ -179,8 +179,7 @@ void uci_init_position(char *position)
 void uci_set_hash_size(int value)
 {
     uci_debug("Setting hash table size..");
-    int tsize = (value * 1024 * 1024) / sizeof(hash_node_t);
-    hash_set_tsize(tsize);
+    hash_set_tsize(value);
 }
 
 void uci_debug(char *str)

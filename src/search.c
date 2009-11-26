@@ -6,6 +6,11 @@
 #include "eval.h"
 #include "defines.h"
 #include "hash.h"
+#if defined(__LP64__)
+    #include "inline64.h"
+#else
+    #include "inline32.h"
+#endif
 
 search_data_t search_data;
 
@@ -55,7 +60,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     if (!depth)
     {
-        if (move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn))
+        if (move_is_attacked(state, LSB(state->pieces[1 - state->turn][KING]), state->turn))
         {
             return AB_INVALID_NODE;
         }
@@ -115,7 +120,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     if (!legal_move)
     {
-        int mate = move_is_attacked(state, state->pieces[state->turn][KING],  1 - state->turn);
+        int mate = move_is_attacked(state, LSB(state->pieces[state->turn][KING]),  1 - state->turn);
         alpha = mate ? -INF + ply: -10;
     }
     else

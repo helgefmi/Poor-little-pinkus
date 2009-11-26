@@ -8,6 +8,11 @@
 #include "defines.h"
 #include "state.h"
 #include "hash.h"
+#if defined(__LP64__)
+    #include "inline64.h"
+#else
+    #include "inline32.h"
+#endif
 
 static uint64_t _cache_hits = 0, _cache_misses = 0;
 uint64_t test_perft_rec(state_t *state, int depth, int verbose)
@@ -17,7 +22,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 
     if (depth == 0)
     {
-        int res = !move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn);
+        int res = !move_is_attacked(state, LSB(state->pieces[1 - state->turn][KING]), state->turn);
         return res;
     }
 

@@ -98,7 +98,7 @@ int main(int argc, char **argv)
         }
     }
 
-    srand(time(0));
+    srand(5);
 
     cache_init();
     hash_init();

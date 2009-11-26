@@ -44,9 +44,9 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
     /* Returns a list of the available moves/captures/promotions in a position, for the player in turn.
        The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere.
        In this scenario, *count will be set to -1. */
-    int opponent = 1 - state->turn,
-        piece;
+    int opponent = 1 - state->turn;
 
+    int piece;
     for (piece = PAWN; piece <= KING; ++piece)
     {
         uint64_t bits = state->pieces[state->turn][piece];
@@ -70,7 +70,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 int capture = -1;
                 if (to_square & state->occupied_both)
                 {
-                    for (capture = PAWN; capture <= KING; ++capture)
+                    for (capture = PAWN; capture < KING; ++capture)
                     {
                         if (to_square & state->pieces[opponent][capture])
                         {
@@ -167,26 +167,58 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
             * Then we need to see if the king or any of the "stepping" squares (F1 and G1 for white king side castle,
             * for instance) are being attacked. */
 
-            uint64_t left_castle = cached->castling_availability[color][0][from_idx];
-            if (left_castle & state->castling)
             {
-                uint64_t steps = cached->castling_steps[color][0];
-                uint64_t move_steps = steps | left_castle << 1;
-                if ((0 == (move_steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+                uint64_t left_castle = cached->castling_availability[color][0][from_idx];
+                if (left_castle & state->castling)
                 {
-                    valid_moves |= left_castle << 2;
+                    uint64_t steps = cached->castling_steps[color][0];
+                    uint64_t move_steps = steps | left_castle << 1;
+                    if ((0 == (move_steps & state->occupied_both)))
+                    {
+                        if (move_is_attacked(state, from_idx, opponent))
+                        {
+                            goto nocastle_1;
+                        }
+                        while (steps)
+                        {
+                            if (move_is_attacked(state, LSB(steps), opponent))
+                            {
+                                goto nocastle_1;
+                            }
+                            steps &= steps - 1;
+                        }
+                        valid_moves |= left_castle << 2;
+                    }
                 }
             }
 
-            uint64_t right_castle = cached->castling_availability[color][1][from_idx];
-            if (right_castle & state->castling)
+            nocastle_1:
+
             {
-                uint64_t steps = cached->castling_steps[color][1];
-                if ((0 == (steps & state->occupied_both)) && !move_is_attacked(state, steps | (1ull << from_idx), opponent))
+                uint64_t right_castle = cached->castling_availability[color][1][from_idx];
+                if (right_castle & state->castling)
                 {
-                    valid_moves |= right_castle >> 1;
+                    uint64_t steps = cached->castling_steps[color][1];
+                    if ((0 == (steps & state->occupied_both)))
+                    {
+                        if (move_is_attacked(state, from_idx, opponent))
+                        {
+                            goto nocastle_2;
+                        }
+                        while (steps)
+                        {
+                            if (move_is_attacked(state, LSB(steps), opponent))
+                            {
+                                goto nocastle_2;
+                            }
+                            steps &= steps - 1;
+                        }
+                        valid_moves |= right_castle >> 1;
+                    }
                 }
             }
+
+            nocastle_2:
             break;
 
         /* Check each direction and see if there are any blockers. If there are, take the nearest blocker
@@ -226,91 +258,54 @@ uint64_t move_piece_moves(state_t *state, int color, int piece, int from_idx)
 }
 
 
-int move_is_attacked(state_t *state, uint64_t squares, int attacker)
+int move_is_attacked(state_t *state, int square_idx, int attacker)
 {
     /* Checks if a set of squares are currently attacked by an attackers pieces */
 
-    while (squares)
-    {
-        uint64_t square = squares & -squares;
-        squares &= squares - 1;
+    if (state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx])
+        return 1;
 
-        int square_idx = LSB(square);
+    if (state->pieces[attacker][KNIGHT] & cached->moves_knight[square_idx])
+        return 1;
 
-        /* Checking whether a pawn, knight or a king is attacking a square by using
-         * "bitwise and" on the squares they can possibly attack from. */
-        if (state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx])
-        {
-            return 1;
-        }
-        else if (state->pieces[attacker][KNIGHT] & cached->moves_knight[square_idx])
-        {
-            return 1;
-        }
-        else if (state->pieces[attacker][KING] & cached->moves_king[square_idx])
-        {
-            return 1;
-        }
+    if (state->pieces[attacker][KING] & cached->moves_king[square_idx])
+        return 1;
 
-        /* We check each 8 directions from the square index, and find out the intersects with occupied_all.
-         * Then we take the first bit relative to the position - that is the least significant bit
-         * in the following directions: NW N NE E, and the most significant bit in the other directions -
-         * and see if it's currently being occupied by a queen or rook/bishop */
+    uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];
 
-        /* BISHOP */
-        uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];
+    uint64_t nw_hits = state->occupied_both & cached->directions[NW][square_idx];
+    if ((nw_hits & -nw_hits) & bishop_and_queen)
+        return 1;
 
-        uint64_t nw_hits = state->occupied_both & cached->directions[NW][square_idx];
-        if ((nw_hits & -nw_hits) & bishop_and_queen)
-        {
-            return 1;
-        }
+    uint64_t ne_hits = state->occupied_both & cached->directions[NE][square_idx];
+    if ((ne_hits & -ne_hits) & bishop_and_queen)
+        return 1;
 
-        uint64_t ne_hits = state->occupied_both & cached->directions[NE][square_idx];
-        if ((ne_hits & -ne_hits) & bishop_and_queen)
-        {
-            return 1;
-        }
+    uint64_t sw_hits = state->occupied_both & cached->directions[SW][square_idx];
+    if (sw_hits && ((1ull << MSB(sw_hits)) & bishop_and_queen))
+        return 1;
 
-        uint64_t sw_hits = state->occupied_both & cached->directions[SW][square_idx];
-        if (sw_hits && ((1ull << MSB(sw_hits)) & bishop_and_queen))
-        {
-            return 1;
-        }
+    uint64_t se_hits = state->occupied_both & cached->directions[SE][square_idx];
+    if (se_hits && ((1ull << MSB(se_hits)) & bishop_and_queen))
+        return 1;
 
-        uint64_t se_hits = state->occupied_both & cached->directions[SE][square_idx];
-        if (se_hits && ((1ull << MSB(se_hits)) & bishop_and_queen))
-        {
-            return 1;
-        }
+    uint64_t rook_and_queen = state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN];
 
-        /* ROOK */
-        uint64_t rook_and_queen = state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN];
+    uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square_idx];
+    if ((north_hits & -north_hits) & rook_and_queen)
+        return 1;
 
-        uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square_idx];
-        if ((north_hits & -north_hits) & rook_and_queen)
-        {
-            return 1;
-        }
+    uint64_t east_hits = state->occupied_both & cached->directions[EAST][square_idx];
+    if ((east_hits & -east_hits) & rook_and_queen)
+        return 1;
 
-        uint64_t east_hits = state->occupied_both & cached->directions[EAST][square_idx];
-        if ((east_hits & -east_hits) & rook_and_queen)
-        {
-            return 1;
-        }
+    uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square_idx];
+    if (south_hits && ((1ull << MSB(south_hits)) & rook_and_queen))
+        return 1;
 
-        uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square_idx];
-        if (south_hits && ((1ull << MSB(south_hits)) & rook_and_queen))
-        {
-            return 1;
-        }
-
-        uint64_t west_hits = state->occupied_both & cached->directions[WEST][square_idx];
-        if (west_hits && ((1ull << MSB(west_hits)) & rook_and_queen))
-        {
-            return 1;
-        }
-    }
+    uint64_t west_hits = state->occupied_both & cached->directions[WEST][square_idx];
+    if (west_hits && ((1ull << MSB(west_hits)) & rook_and_queen))
+        return 1;
 
     return 0;
 }

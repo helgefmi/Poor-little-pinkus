@@ -55,6 +55,11 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     if (!depth)
     {
+        if (move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn))
+        {
+            return AB_INVALID_NODE;
+        }
+
         return eval_state(state);
     }
 
@@ -65,23 +70,30 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     int count = 0;
     move_generate_moves(state, moves, &count);
 
-    qsort(moves, count, sizeof(move_t), cmp_sort_captures);
+    if (count == -1)
+    {
+        return AB_INVALID_NODE;
+    }
+
+    if (depth > 1)
+    {
+        qsort(moves, count, sizeof(move_t), cmp_sort_captures);
+    }
 
     int i, legal_move = 0, best_move_id = -1;
     for (i = 0; i < count; ++i)
     {
         move_make(state, &moves[i]);
 
-        if (move_is_attacked(state, state->pieces[1 - state->turn][KING], state->turn))
-        {
-            move_unmake(state, &moves[i]);
-            continue;
-        }
-
         legal_move = 1;
 
         int eval = -search_ab(state, depth - 1, -beta, -alpha);
         move_unmake(state, &moves[i]);
+
+        if (eval == -AB_INVALID_NODE)
+        {
+            continue;
+        }
 
         if (eval >= beta)
         {

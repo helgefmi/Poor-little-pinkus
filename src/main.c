@@ -41,7 +41,7 @@ void print_usage()
 int main(int argc, char **argv)
 {
     char *fen = FEN_INIT;
-    int depth = 1;
+    int depth = 0;
     int table_size = 512;
     int mode = MODE_PRINT_USAGE;
 
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
             state_init_from_fen(state, fen);
         case MODE_PERFTSUITE:
         case MODE_BENCH:
-            printf("Initializing hash table with size: %d\n", table_size);
+            printf("Initializing hash table with size: %dMB\n", table_size);
             hash_set_tsize(table_size);
             break;
     }
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
             print_usage();
             break;
         case MODE_BENCH:
-            bench_start(0);
+            bench_start(depth);
             break;
     }
 

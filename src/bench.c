@@ -21,7 +21,7 @@ int depths[NUM_BENCHES] = {
     8, 8, 7
 };
 
-void bench_start(int increase)
+void bench_start(int depth)
 {
     uint64_t total_nodes = 0;
     struct timeval start_time, now;
@@ -37,7 +37,7 @@ void bench_start(int increase)
         state_init_from_fen(&state, benchmarks[i]);
 
         hash_wipe();
-        timectrl_go(&state, 0, 0, 0, depths[i] + increase, 0, 0, 0);
+        timectrl_go(&state, 0, 0, 0, depth ? depth : depths[i], 0, 0, 0);
 
         total_nodes += search_data.visited_nodes;
         cache_hits += search_data.cache_hits;

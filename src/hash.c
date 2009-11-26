@@ -95,7 +95,7 @@ void hash_set_tsize(int memsize)
 
     _hash_mask = tsize - 1;
     hash_table = malloc(sizeof(hash_node_t) * tsize);
-    memset(hash_table, 0, sizeof(hash_node_t) * tsize);
+    hash_wipe();
 }
 
 int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score, int *move)
@@ -214,5 +214,5 @@ uint64_t hash_make_zobrist(state_t *state)
 
 void hash_wipe()
 {
-    memset(hash_table, 0, sizeof(hash_table));
+    memset(hash_table, 0, sizeof(hash_node_t) * (_hash_mask + 1));
 }

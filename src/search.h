@@ -4,6 +4,8 @@
 #include "state.h"
 #include "move.h"
 
+#define AB_INVALID_NODE -0xdead
+
 typedef struct
 {
     move_t move;

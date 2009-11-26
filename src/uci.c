@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,8 +185,12 @@ void uci_set_hash_size(int value)
 
 void uci_debug(char *str)
 {
-    fprintf(uci_logfile, "DEBUG: %s\n", str);
+    flockfile(uci_logfile);
+
+    fprintf(uci_logfile, "%d: %s\n", getpid(), str);
     fflush(uci_logfile);
+
+    funlockfile(uci_logfile);
 }
 
 void uci_go(char *params)

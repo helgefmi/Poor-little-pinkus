@@ -70,7 +70,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 int capture = -1;
                 if (to_square & state->occupied_both)
                 {
-                    for (capture = PAWN; capture < KING; ++capture)
+                    for (capture = QUEEN; capture >= 0; --capture)
                     {
                         if (to_square & state->pieces[opponent][capture])
                         {
@@ -79,7 +79,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                         }
                     }
 
-                    if (capture == KING)
+                    if (capture == -1)
                     {
                         /* This means that the position is invalid, since the king can be captured */
                         *count = -1;

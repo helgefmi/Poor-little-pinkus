@@ -46,12 +46,17 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 {
     ++search_data.visited_nodes;
 
-    int score = 0;
+    int score = 0,
+        ply = search_data.max_depth - depth;
+
     search_data.best_move_id = -1;
     if (hash_probe(state->zobrist, depth, alpha, beta, &score, &search_data.best_move_id))
     {
         ++search_data.cache_hits;
-        return score;
+        if (ply > 0)
+        {
+            return score;
+        }
     }
     else
     {
@@ -68,8 +73,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
         return eval_state(state);
     }
 
-    int hash_type = HASH_ALPHA,
-        ply = search_data.max_depth - depth;
+    int hash_type = HASH_ALPHA;
 
     move_t moves[100];
     int count = 0;

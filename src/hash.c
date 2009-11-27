@@ -3,12 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "hash.h"
-#include "defines.h"
-#if defined(__LP64__)
-    #include "inline64.h"
-#else
-    #include "inline32.h"
-#endif
+#include "plp.h"
 
 static hash_node_t *hash_table;
 static int _hash_mask;

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "defines.h"
 #include "cache.h"
 #include "state.h"
 #include "test.h"
@@ -10,6 +9,7 @@
 #include "uci.h"
 #include "eval.h"
 #include "bench.h"
+#include "plp.h"
 
 void print_usage()
 {

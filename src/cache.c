@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include "cache.h"
-#include "defines.h"
+#include "plp.h"
 
 void cache_init()
 {

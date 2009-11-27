@@ -5,9 +5,9 @@
 #include <assert.h>
 #include "state.h"
 #include "cache.h"
-#include "defines.h"
 #include "util.h"
 #include "hash.h"
+#include "plp.h"
 
 int state_init_from_fen(state_t *state, char *fen)
 {

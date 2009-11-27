@@ -3,14 +3,9 @@
 #include <string.h>
 #include "move.h"
 #include "util.h"
-#include "defines.h"
 #include "cache.h"
 #include "hash.h"
-#if defined(__LP64__)
-    #include "inline64.h"
-#else
-    #include "inline32.h"
-#endif
+#include "plp.h"
 
 void move_to_string(move_t *move, char *out)
 {

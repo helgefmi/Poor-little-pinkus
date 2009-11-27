@@ -4,13 +4,8 @@
 #include <assert.h>
 #include "search.h"
 #include "eval.h"
-#include "defines.h"
 #include "hash.h"
-#if defined(__LP64__)
-    #include "inline64.h"
-#else
-    #include "inline32.h"
-#endif
+#include "plp.h"
 
 search_data_t search_data;
 

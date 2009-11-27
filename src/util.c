@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "util.h"
 #include "cache.h"
-#include "defines.h"
+#include "plp.h"
 
 int util_char_to_piece(char piece_c)
 {

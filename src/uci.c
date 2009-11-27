@@ -7,7 +7,7 @@
 #include "uci.h"
 #include "util.h"
 #include "hash.h"
-#include "defines.h"
+#include "plp.h"
 #include "search.h"
 #include "move.h"
 #include "timectrl.h"

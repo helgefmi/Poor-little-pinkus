@@ -5,14 +5,9 @@
 #include <math.h>
 #include "test.h"
 #include "move.h"
-#include "defines.h"
 #include "state.h"
 #include "hash.h"
-#if defined(__LP64__)
-    #include "inline64.h"
-#else
-    #include "inline32.h"
-#endif
+#include "plp.h"
 
 static uint64_t _cache_hits = 0, _cache_misses = 0;
 uint64_t test_perft_rec(state_t *state, int depth, int verbose)

@@ -1,11 +1,6 @@
 #include "eval.h"
-#include "defines.h"
+#include "plp.h"
 #include "state.h"
-#if defined(__LP64__)
-    #include "inline64.h"
-#else
-    #include "inline32.h"
-#endif
 
 static int eval_piece_values[6] = {10, 30, 31, 50, 90, 500};
 

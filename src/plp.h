@@ -1,7 +1,5 @@
-#ifndef _DEFINES_H
-#define _DEFINES_H
-
-/* Some convenient variables to make the rest of the code clearer. */
+#ifndef _PLP_H
+#define _PLP_H
 
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -26,6 +24,13 @@
 #define SW 7
 
 #define INF 99999999
+
+/* Headers for optimized versions of LSB, MSB and PopCnt */
+#if defined(__LP64__)
+    #include "inline64.h"
+#else
+    #include "inline32.h"
+#endif
 
 /* A1 - H8 {{{ */
 #define A1 1ull << 0

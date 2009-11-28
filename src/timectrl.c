@@ -62,20 +62,20 @@ void timectrl_alarm(int n)
         printf("info nodes %llu nps %d",
             search_data.visited_nodes, (int)(search_data.visited_nodes / spent_time));
 
-        if (search_data.pv[0].depth > 0)
+        if (search_data.pv[0][0])
         {
-            printf(" depth %d score cp %.2f time %d pv", search_data.pv[0].depth, (float)search_data.pv[0].score / 100, (int)spent_time * 1000);
+            printf(" depth %d score cp %d time %d pv", search_data.max_depth, search_data.best_score, (int)spent_time * 1000);
 
             int i;
             for (i = 0; i < 128; ++i)
             {
-                char buf[16];
-                if (!search_data.pv[i].depth)
+                if (!search_data.pv[0][i])
                 {
                     break;
                 }
 
-                util_move_to_lan(search_data.pv[i].move, buf);
+                char buf[16];
+                util_move_to_lan(search_data.pv[0][i], buf);
                 printf(" %s", buf);
             }
         }

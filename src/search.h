@@ -8,17 +8,12 @@
 
 typedef struct
 {
-    int move;
-    int score;
-    int depth;
-} pv_t;
+    int pv[128][128];
+    int best_score;
+    int max_depth;
 
-typedef struct
-{
-    pv_t pv[100];
     uint64_t visited_nodes;
     int cache_hits, cache_misses;
-    int max_depth;
 } search_data_t;
 
 extern search_data_t search_data;

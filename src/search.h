@@ -8,7 +8,7 @@
 
 typedef struct
 {
-    move_t move;
+    int move;
     int score;
     int depth;
 } pv_t;

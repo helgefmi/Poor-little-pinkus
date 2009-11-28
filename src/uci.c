@@ -124,7 +124,7 @@ void uci_bestmove()
     else
     {
         char buf[16];
-        move_to_string(&search_data.pv[0].move, buf);
+        util_move_to_lan(search_data.pv[0].move, buf);
         uci_debug("giving out best move:");
         uci_debug(buf);
         printf("bestmove %s\n", buf);
@@ -167,9 +167,8 @@ void uci_init_position(char *position)
                 sscanf(position, "%s", word);
                 position += strlen(word) + 1;
 
-                move_t move;
-                util_chars_to_move(word, &move, uci_state);
-                move_make(uci_state, &move, 0);
+                int move = util_chars_to_move(word, uci_state);
+                move_make(uci_state, move, 0);
             }
         }
     }

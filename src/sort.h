@@ -3,6 +3,6 @@
 
 #include "move.h"
 
-void sort_moves(move_t*, int);
+void sort_moves(int*, int);
 
 #endif

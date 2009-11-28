@@ -103,12 +103,12 @@ int main(int argc, char **argv)
     cache_init();
     hash_init();
 
-#if 0
+    /*
     state_t tmp_state;
-    state_init_from_fen(&tmp_state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1");
+    state_init_from_fen(&tmp_state, "4k3/4p3/4K3/8/8/8/8/8 b - - 0 1");
     printf("%d\n", eval_state(&tmp_state));
     exit(1);
-#endif
+    */
 
     /* State will only be set up with -fen if we want perft/divide */
     state_t *state = 0;

@@ -61,7 +61,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     int hash_type = HASH_ALPHA;
 
-    move_t moves[100];
+    int moves[100];
     int count = 0;
     move_generate_moves(state, moves, &count);
 
@@ -78,12 +78,12 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     int i, legal_move = 0, best_move_id = -1;
     for (i = 0; i < count; ++i)
     {
-        move_make(state, &moves[i], ply);
+        move_make(state, moves[i], ply);
 
         legal_move = 1;
 
         int eval = -search_ab(state, depth - 1, -beta, -alpha);
-        move_unmake(state, &moves[i], ply);
+        move_unmake(state, moves[i], ply);
 
         if (eval == -AB_INVALID_NODE)
         {
@@ -102,7 +102,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
             // TODO: best_move_id = moves[i].move_id;
 
-            memcpy(&search_data.pv[ply].move, &moves[i], sizeof(move_t));
+            memcpy(&search_data.pv[ply].move, &moves[i], sizeof(int));
             search_data.pv[ply].score = eval;
             search_data.pv[ply].depth = depth;
         }

@@ -6,6 +6,7 @@
 #include "timectrl.h"
 #include "search.h"
 #include "uci.h"
+#include "util.h"
 
 timecontrol_t timecontrol;
 
@@ -74,7 +75,7 @@ void timectrl_alarm(int n)
                     break;
                 }
 
-                move_to_string(&search_data.pv[i].move, buf);
+                util_move_to_lan(search_data.pv[i].move, buf);
                 printf(" %s", buf);
             }
         }

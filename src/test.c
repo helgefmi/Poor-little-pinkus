@@ -9,6 +9,7 @@
 #include "state.h"
 #include "hash.h"
 #include "plp.h"
+#include "util.h"
 
 static uint64_t _cache_hits = 0, _cache_misses = 0;
 uint64_t test_perft_rec(state_t *state, int depth, int verbose)
@@ -37,7 +38,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         }
     }
 
-    move_t moves[100];
+    int moves[100];
     int count = 0;
 
     move_generate_moves(state, moves, &count);
@@ -53,7 +54,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     int i;
     for (i = 0; i < count; ++i)
     {
-        move_make(state, &moves[i], depth);
+        move_make(state, moves[i], depth);
 
         uint64_t res = test_perft_rec(state, depth - 1, 0);
         nodes += res;
@@ -61,11 +62,11 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
         if (verbose && res > 0)
         {
             char move_str[16];
-            move_to_string(&moves[i], move_str);
+            util_move_to_lan(moves[i], move_str);
             printf("%s: %lld\n", move_str, res);
         }
 
-        move_unmake(state, &moves[i], depth);
+        move_unmake(state, moves[i], depth);
     }
 
     hash_add_node(state->zobrist, nodes, depth, 0, 0);

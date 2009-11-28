@@ -23,44 +23,30 @@ int util_char_to_color(char piece_c)
     return isupper(piece_c) ? WHITE : BLACK;
 }
 
-void util_chars_to_move(char *move_str, move_t *move, state_t *state)
+int util_chars_to_move(char *move_str, state_t *state)
 {
-    move->from = util_chars_to_square(move_str);
+    int from, to, piece, capture, promote;
+
+    from = util_chars_to_square(move_str);
     move_str += 2;
-    move->to = util_chars_to_square(move_str);
+    to = util_chars_to_square(move_str);
     move_str += 2;
 
-    move->promotion = -1;
+    promote = -1;
     if (move_str[0])
     {
-        move->promotion = util_char_to_piece(move_str[0]);
+        promote = util_char_to_piece(move_str[0]);
     }
 
-    move->capture = -1;
-    move->piece = -1;
+    capture = state->square[to];
+    piece = state->square[from];
 
-    int color, piece;
-    for (color = WHITE; color <= BLACK; ++color)
+    if (piece == PAWN && (1ull << to) & state->en_passant)
     {
-        for (piece = PAWN; piece <= KING; ++piece)
-        {
-            if (state->pieces[color][piece] & (1ull << move->from))
-            {
-                move->piece = piece;
-            }
-            if (state->pieces[color][piece] & (1ull << move->to))
-            {
-                move->capture = piece; 
-            }
-        }
+        capture = PAWN;
     }
 
-    assert(move->piece >= 0);
-
-    if (move->piece == PAWN && (1ull << move->to) & state->en_passant)
-    {
-        move->capture = PAWN;
-    }
+    return PackMove(from, to, piece, capture, promote);
 }
 
 void util_square_to_chars(uint64_t square, char *out)
@@ -115,3 +101,29 @@ char *util_trim_str(char *str)
     *(end + 1) = '\0';
     return str;
 }
+
+void util_move_to_lan(int move, char *out)
+{
+    /* Makes a string out of a move_t struct */
+    int i = 0;
+
+    char buf[2];
+
+    util_square_to_chars(MoveFrom(move), buf);
+
+    out[i++] = buf[0];
+    out[i++] = buf[1];
+
+    util_square_to_chars(MoveTo(move), buf);
+
+    out[i++] = buf[0];
+    out[i++] = buf[1];
+
+    if (MovePromote(move) < 6)
+    {
+        out[i++] = util_piece_to_char(BLACK, MovePromote(move));
+    }
+
+    out[i++] = '\0';
+}
+

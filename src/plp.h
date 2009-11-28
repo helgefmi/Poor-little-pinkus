@@ -25,11 +25,13 @@
 
 #define INF 99999999
 
-#define MoveFrom(move) move->from
-#define MoveTo(move) move->to
-#define MovePiece(move) move->piece
-#define MoveCapture(move) move->capture
-#define MovePromote(move) move->promotion
+#define MoveFrom(move)    (move & 63)
+#define MoveTo(move)      ((move >> 6) & 63)
+#define MovePiece(move)   ((move >> 12) & 7)
+#define MoveCapture(move) ((move >> 15) & 7)
+#define MovePromote(move) ((move >> 18) & 7)
+
+#define PackMove(from, to, piece, capture, promote) (from | ((to & 63) << 6) | ((piece & 7) << 12) | ((capture & 7) << 15) | ((promote & 7) << 18))
 
 #define ClearLow(x) ((x) &= (x) - 1)
 

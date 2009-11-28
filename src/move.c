@@ -7,32 +7,7 @@
 #include "hash.h"
 #include "plp.h"
 
-void move_to_string(move_t *move, char *out)
-{
-    /* Makes a string out of a move_t struct */
-    int i = 0;
-
-    char buf[2];
-
-    util_square_to_chars(MoveFrom(move), buf);
-
-    out[i++] = buf[0];
-    out[i++] = buf[1];
-
-    util_square_to_chars(MoveTo(move), buf);
-
-    out[i++] = buf[0];
-    out[i++] = buf[1];
-
-    if (MovePromote(move) >= 0)
-    {
-        out[i++] = util_piece_to_char(BLACK, MovePromote(move));
-    }
-
-    out[i++] = '\0';
-}
-
-void move_generate_moves(state_t *state, move_t *moves, int *count)
+void move_generate_moves(state_t *state, int *moves, int *count)
 {
     /* Returns a list of the available moves/captures/promotions in a position, for the player in turn.
        The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere.
@@ -74,14 +49,10 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 /* Check if it's a promotion. If so, generate a move for all possible promotions. */
                 if (piece == PAWN && to_square & cached->promotion_rank[state->turn])
                 {
-                    int promotion;
-                    for (promotion = QUEEN; promotion >= KNIGHT; --promotion)
+                    int promote;
+                    for (promote = QUEEN; promote >= KNIGHT; --promote)
                     {
-                        moves[*count].from = from;
-                        moves[*count].to = to;
-                        moves[*count].piece = piece;
-                        moves[*count].capture = capture;
-                        moves[*count].promotion = promotion;
+                        *moves++ = PackMove(from, to, piece, capture, promote);
 
                         ++(*count);
                     }
@@ -89,12 +60,7 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 else
                 {
                     /* If it's not a promotion, we'll just generate one move. */
-                    moves[*count].from = from;
-                    moves[*count].to = to;
-                    moves[*count].piece = piece;
-                    moves[*count].capture = capture;
-                    moves[*count].promotion = -1;
-
+                    *moves++ = PackMove(from, to, piece, capture, -1);
                     ++(*count);
                 }
             }
@@ -280,7 +246,7 @@ int move_is_attacked(state_t *state, int square_idx, int attacker)
     return 0;
 }
 
-void move_make(state_t *state, move_t *move, int ply)
+void move_make(state_t *state, int move, int ply)
 {
     register uint64_t from_square, to_square;
     register int from, to, piece, capture, promote;
@@ -308,7 +274,7 @@ void move_make(state_t *state, move_t *move, int ply)
     state->square[from] = -1;
 
     /* Update the board with the new position of the piece. */
-    if (promote >= 0)
+    if (promote < 6)
     {
         state->pieces[state->turn][promote] ^= to_square;
         state->zobrist ^= hash_zobrist->pieces[state->turn][promote][to];
@@ -322,7 +288,7 @@ void move_make(state_t *state, move_t *move, int ply)
     }
 
     /* If it is a capture, we need to remove the opponent piece as well. */
-    if (capture >= 0)
+    if (capture < 6)
     {
         /* Remember to clear castling availability if we capture a rook. */
         if (state->castling & to_square)
@@ -427,7 +393,7 @@ void move_make(state_t *state, move_t *move, int ply)
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
 }
 
-void move_unmake(state_t *state, move_t *move, int ply)
+void move_unmake(state_t *state, int move, int ply)
 {
     register uint64_t from_square, to_square;
     register int from, to, piece, capture, promote;
@@ -457,7 +423,7 @@ void move_unmake(state_t *state, move_t *move, int ply)
     state->occupied[state->turn] ^= to_square;
     state->square[to] = -1;
 
-    if (promote >= 0)
+    if (promote < 6)
     {
         state->pieces[state->turn][promote] ^= to_square;
     }
@@ -467,7 +433,7 @@ void move_unmake(state_t *state, move_t *move, int ply)
     }
 
     /* If it is a capture, we need to remove the opponent piece as well. */
-    if (capture >= 0)
+    if (capture < 6)
     {
         uint64_t to_remove_square = to_square;
         if (piece == PAWN && to_square & state->en_passant)

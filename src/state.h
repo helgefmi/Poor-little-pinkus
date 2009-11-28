@@ -28,8 +28,6 @@ typedef struct
     uint64_t old_castling[128], old_en_passant[128], old_zobrist[128];
 } state_t;
 
-struct move_t;
-
 int state_init_from_fen(state_t*, char*);
 void state_print(state_t*);
 

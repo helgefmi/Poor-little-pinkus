@@ -16,6 +16,8 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
 
     /* CASTLING */
 
+    *count = 0;
+
     if (cached->castling_by_color[state->turn] & state->castling)
     {
         if ((state->castling & cached->castling_rooksq[state->turn][1]) &&

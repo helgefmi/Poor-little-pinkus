@@ -6,7 +6,6 @@
 #include "eval.h"
 #include "hash.h"
 #include "plp.h"
-#include "sort.h"
 #include "next.h"
 
 search_data_t search_data;
@@ -55,20 +54,15 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     }
 
     int moves[100];
-    int count;
+    int count = 0;
 
     search_data.move_phase[ply] = PHASE_HASH;
     int legal_move = 0, best_move = 0, hash_type = HASH_ALPHA;
-    while (next_moves(state, moves, &count, ply))
+    while (next_moves(state, moves, &count, ply, depth))
     {
         if (!count)
         {
             continue;
-        }
-
-        if (depth > 1 && count > 1)
-        {
-            sort_moves(moves, count);
         }
 
         int i;

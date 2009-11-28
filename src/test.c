@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,7 +53,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     int i;
     for (i = 0; i < count; ++i)
     {
-        move_make(state, &moves[i]);
+        move_make(state, &moves[i], depth);
 
         uint64_t res = test_perft_rec(state, depth - 1, 0);
         nodes += res;
@@ -64,7 +65,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
             printf("%s: %lld\n", move_str, res);
         }
 
-        move_unmake(state, &moves[i]);
+        move_unmake(state, &moves[i], depth);
     }
 
     hash_add_node(state->zobrist, nodes, depth, 0, 0);

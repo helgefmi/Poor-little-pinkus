@@ -14,21 +14,19 @@ void move_to_string(move_t *move, char *out)
 
     char buf[2];
 
-    util_square_to_chars(move->from_square_idx, buf);
+    util_square_to_chars(MoveFrom(move), buf);
 
     out[i++] = buf[0];
     out[i++] = buf[1];
 
-    //out[i++] = (move->capture >= 0) ? 'x' : ' ';
-
-    util_square_to_chars(move->to_square_idx, buf);
+    util_square_to_chars(MoveTo(move), buf);
 
     out[i++] = buf[0];
     out[i++] = buf[1];
 
-    if (move->promotion >= 0)
+    if (MovePromote(move) >= 0)
     {
-        out[i++] = util_piece_to_char(BLACK, move->promotion);
+        out[i++] = util_piece_to_char(BLACK, MovePromote(move));
     }
 
     out[i++] = '\0';
@@ -40,7 +38,6 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
        The generated moves might leave the king in check (invalid move), so this has to be checked elsewhere.
        In this scenario, *count will be set to -1. */
     int opponent = 1 - state->turn;
-
     int piece;
     for (piece = PAWN; piece <= KING; ++piece)
     {
@@ -49,38 +46,24 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
         while (bits)
         {
             uint64_t from_square = bits & -bits;
-            int from_square_idx = LSB(from_square);
+            int from = LSB(from_square);
             bits &= bits - 1;
 
-            uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from_square_idx);
+            uint64_t valid_moves = move_piece_moves(state, state->turn, piece, from);
             while (valid_moves)
             {
                 uint64_t to_square = valid_moves & -valid_moves;
-                int to_square_idx = LSB(to_square);
+                int to = LSB(to_square);
                 valid_moves &= valid_moves - 1;
                 
-                int move_score = MSCORE_DEFAULT - piece;
-
-                /* Check if it's a capture. If so, set "capture" to the captured piece. */
-                int capture = -1;
-                if (to_square & state->occupied_both)
+                if (to == state->king_idx[opponent])
                 {
-                    for (capture = QUEEN; capture >= 0; --capture)
-                    {
-                        if (to_square & state->pieces[opponent][capture])
-                        {
-                            move_score = MSCORE_CAPTURE + (capture - piece);
-                            break;
-                        }
-                    }
-
-                    if (capture == -1)
-                    {
-                        /* This means that the position is invalid, since the king can be captured */
-                        *count = -1;
-                        return;
-                    }
+                    /* This means that the position is invalid, since the king can be captured */
+                    *count = -1;
+                    return;
                 }
+
+                int capture = state->square[to];
 
                 /* En passant is a capture as well. */
                 if (piece == PAWN && to_square & state->en_passant)
@@ -92,17 +75,13 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 if (piece == PAWN && to_square & cached->promotion_rank[state->turn])
                 {
                     int promotion;
-                    for (promotion = KNIGHT; promotion < KING; ++promotion)
+                    for (promotion = QUEEN; promotion >= KNIGHT; --promotion)
                     {
-                        moves[*count].from_square = from_square;
-                        moves[*count].to_square = to_square;
-                        moves[*count].from_square_idx = from_square_idx;
-                        moves[*count].to_square_idx = to_square_idx;
-                        moves[*count].from_piece = piece;
+                        moves[*count].from = from;
+                        moves[*count].to = to;
+                        moves[*count].piece = piece;
                         moves[*count].capture = capture;
                         moves[*count].promotion = promotion;
-                        moves[*count].move_score = move_score + MSCORE_PROMOTION + promotion;
-                        moves[*count].move_id = *count;
 
                         ++(*count);
                     }
@@ -110,15 +89,11 @@ void move_generate_moves(state_t *state, move_t *moves, int *count)
                 else
                 {
                     /* If it's not a promotion, we'll just generate one move. */
-                    moves[*count].from_square = from_square;
-                    moves[*count].to_square = to_square;
-                    moves[*count].from_square_idx = from_square_idx;
-                    moves[*count].to_square_idx = to_square_idx;
-                    moves[*count].from_piece = piece;
+                    moves[*count].from = from;
+                    moves[*count].to = to;
+                    moves[*count].piece = piece;
                     moves[*count].capture = capture;
                     moves[*count].promotion = -1;
-                    moves[*count].move_score = move_score;
-                    moves[*count].move_id = *count;
 
                     ++(*count);
                 }
@@ -305,61 +280,78 @@ int move_is_attacked(state_t *state, int square_idx, int attacker)
     return 0;
 }
 
-void move_make(state_t *state, move_t *move)
+void move_make(state_t *state, move_t *move, int ply)
 {
-    /* Save some data for unmake_move */
-    move->castling = state->castling;
-    move->en_passant = state->en_passant;
-    move->zobrist = state->zobrist;
+    register uint64_t from_square, to_square;
+    register int from, to, piece, capture, promote;
+    register int opponent;
 
-    int opponent = 1 - state->turn;
+    /* Save some data for unmake_move */
+    state->old_castling[ply] = state->castling;
+    state->old_en_passant[ply] = state->en_passant;
+    state->old_zobrist[ply] = state->zobrist;
+
+    from = MoveFrom(move);
+    to = MoveTo(move);
+    piece = MovePiece(move);
+    capture = MoveCapture(move);
+    promote = MovePromote(move);
+
+    from_square = 1ull << from;
+    to_square = 1ull << to;
+    opponent = 1 - state->turn;
 
     /* Remove the piece that moved from the board. */
-    state->pieces[state->turn][move->from_piece] ^= move->from_square;
-    state->occupied[state->turn] ^= move->from_square;
-    state->zobrist ^= hash_zobrist->pieces[state->turn][move->from_piece][move->from_square_idx];
-
-    /* If it is a capture, we need to remove the opponent piece as well. */
-    if (move->capture >= 0)
-    {
-        /* Remember to clear castling availability if we capture a rook. */
-        if (state->castling & move->to_square)
-        {
-            state->castling &= ~move->to_square;
-            state->zobrist ^= hash_zobrist->castling[move->to_square_idx];
-        }
-
-        uint64_t to_remove_square = move->to_square;
-        int to_remove_square_idx = move->to_square_idx;
-
-        if (move->from_piece == PAWN && move->to_square & state->en_passant)
-        {
-            /* The piece captured with en passant; we need to clear the board of the captured piece.
-                * We simply use the pawn move square of the opponent to find out which square to clear. */
-            to_remove_square = cached->moves_pawn_one[opponent][move->to_square_idx];
-            to_remove_square_idx = LSB(to_remove_square);
-        }
-
-        /* Remove the captured piece off the board. */
-        state->pieces[opponent][move->capture] ^= to_remove_square;
-        state->occupied[opponent] ^= to_remove_square;
-        state->zobrist ^= hash_zobrist->pieces[opponent][move->capture][to_remove_square_idx];
-    }
+    state->pieces[state->turn][piece] &= ~from_square;
+    state->occupied[state->turn] &= ~from_square;
+    state->zobrist ^= hash_zobrist->pieces[state->turn][piece][from];
+    state->square[from] = -1;
 
     /* Update the board with the new position of the piece. */
-    if (move->promotion >= 0)
+    if (promote >= 0)
     {
-        state->pieces[state->turn][move->promotion] ^= move->to_square;
-        state->zobrist ^= hash_zobrist->pieces[state->turn][move->promotion][move->to_square_idx];
+        state->pieces[state->turn][promote] ^= to_square;
+        state->zobrist ^= hash_zobrist->pieces[state->turn][promote][to];
+        state->square[to] = promote;
     }
     else
     {
-        state->pieces[state->turn][move->from_piece] ^= move->to_square;
-        state->zobrist ^= hash_zobrist->pieces[state->turn][move->from_piece][move->to_square_idx];
+        state->pieces[state->turn][piece] ^= to_square;
+        state->zobrist ^= hash_zobrist->pieces[state->turn][piece][to];
+        state->square[to] = piece;
+    }
+
+    /* If it is a capture, we need to remove the opponent piece as well. */
+    if (capture >= 0)
+    {
+        /* Remember to clear castling availability if we capture a rook. */
+        if (state->castling & to_square)
+        {
+            state->castling &= ~to_square;
+            state->zobrist ^= hash_zobrist->castling[to];
+        }
+
+        uint64_t to_remove_square = to_square;
+        int to_remove_square_idx = to;
+
+        if (piece == PAWN && to_square & state->en_passant)
+        {
+            /* The piece captured with en passant; we need to clear the board of the captured piece.
+                * We simply use the pawn move square of the opponent to find out which square to clear. */
+            to_remove_square = cached->moves_pawn_one[opponent][to];
+            to_remove_square_idx = LSB(to_remove_square);
+
+            state->square[to_remove_square_idx] = -1;
+        }
+
+        /* Remove the captured piece off the board. */
+        state->pieces[opponent][capture] ^= to_remove_square;
+        state->occupied[opponent] ^= to_remove_square;
+        state->zobrist ^= hash_zobrist->pieces[opponent][capture][to_remove_square_idx];
     }
 
     /* Update "occupied" with the same piece as above. */
-    state->occupied[state->turn] ^= move->to_square;
+    state->occupied[state->turn] ^= to_square;
     
     if (state->en_passant)
     {
@@ -368,13 +360,13 @@ void move_make(state_t *state, move_t *move)
     }
 
     uint64_t rook_mask;
-    switch (move->from_piece)
+    switch (piece)
     {
         case PAWN:
-            /* Clear / set en_passant. */
-            if (~cached->moves_pawn_one[state->turn][move->from_square_idx] & move->to_square & cached->moves_pawn_two[state->turn][move->from_square_idx])
+            /* set en_passant? */
+            if (~cached->moves_pawn_one[state->turn][from] & to_square & cached->moves_pawn_two[state->turn][from])
             {
-                state->en_passant = cached->moves_pawn_one[state->turn][move->from_square_idx];
+                state->en_passant = cached->moves_pawn_one[state->turn][from];
                 state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
             }
             break;
@@ -385,10 +377,10 @@ void move_make(state_t *state, move_t *move)
 
         case ROOK:
             /* Clear the appropriate castling availability. */
-            if (state->castling & move->from_square)
+            if (state->castling & from_square)
             {
-                state->castling &= ~move->from_square;
-                state->zobrist ^= hash_zobrist->castling[move->from_square_idx];
+                state->castling &= ~from_square;
+                state->zobrist ^= hash_zobrist->castling[from];
             }
             break;
 
@@ -396,11 +388,19 @@ void move_make(state_t *state, move_t *move)
             break;
 
         case KING:
-            rook_mask = cached->castling_rookmask[state->turn][move->from_square_idx][move->to_square_idx];
+            rook_mask = cached->castling_rookmask[state->turn][from][to];
 
             state->pieces[state->turn][ROOK] ^= rook_mask;
             state->occupied[state->turn] ^= rook_mask;
-            state->zobrist ^= hash_zobrist->rook_castling[state->turn][move->from_square_idx][move->to_square_idx];
+            state->zobrist ^= hash_zobrist->rook_castling[state->turn][from][to];
+
+            state->king_idx[state->turn] = to;
+
+            for (;rook_mask; ClearLow(rook_mask))
+            {
+                int tmp = LSB(rook_mask);
+                state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+            }
 
             #if 0
             /* These three lines are apparently slower than the branching/LSB thingie below ..*/
@@ -427,52 +427,64 @@ void move_make(state_t *state, move_t *move)
     state->occupied_both = state->occupied[WHITE] | state->occupied[BLACK];
 }
 
-void move_unmake(state_t *state, move_t *move)
+void move_unmake(state_t *state, move_t *move, int ply)
 {
-    /* Save some data for unmake_move */
-    state->castling = move->castling;
-    state->en_passant = move->en_passant;
-    state->zobrist = move->zobrist;
+    register uint64_t from_square, to_square;
+    register int from, to, piece, capture, promote;
+    register int opponent;
 
-    int opponent = state->turn;
+    /* Save some data for unmake_move */
+    state->castling = state->old_castling[ply];
+    state->en_passant = state->old_en_passant[ply];
+    state->zobrist = state->old_zobrist[ply];
+
+    from = MoveFrom(move);
+    to = MoveTo(move);
+    piece = MovePiece(move);
+    capture = MoveCapture(move);
+    promote = MovePromote(move);
+
+    from_square = 1ull << from;
+    to_square = 1ull << to;
+    opponent = state->turn;
     state->turn ^= 1;
 
-    /* Remove the piece that moved from the board. */
-    state->pieces[state->turn][move->from_piece] ^= move->from_square;
-    state->occupied[state->turn] ^= move->from_square;
+    /* Update from/to squares */
+    state->pieces[state->turn][piece] |= from_square;
+    state->occupied[state->turn] |= from_square;
+    state->square[from] = piece;
 
-    /* If it is a capture, we need to remove the opponent piece as well. */
-    if (move->capture >= 0)
+    state->occupied[state->turn] ^= to_square;
+    state->square[to] = -1;
+
+    if (promote >= 0)
     {
-        uint64_t to_remove_square = move->to_square;
-        if (move->from_piece == PAWN && move->to_square & state->en_passant)
-        {
-            /* The piece captured with en passant; we need to clear the board of the captured piece.
-                * We simply use the pawn move square of the opponent to find out which square to clear. */
-            to_remove_square = cached->moves_pawn_one[opponent][move->to_square_idx];
-        }
-
-        /* Remove the captured piece off the board. */
-        state->pieces[opponent][move->capture] ^= to_remove_square;
-        state->occupied[opponent] ^= to_remove_square;
-    }
-
-    /* Update the board with the new position of the piece. */
-    if (move->promotion >= 0)
-    {
-        state->pieces[state->turn][move->promotion] ^= move->to_square;
+        state->pieces[state->turn][promote] ^= to_square;
     }
     else
     {
-        state->pieces[state->turn][move->from_piece] ^= move->to_square;
+        state->pieces[state->turn][piece] ^= to_square;
     }
 
-    /* Update "occupied" with the same piece as above. */
-    state->occupied[state->turn] ^= move->to_square;
-    
-    uint64_t rook_mask;
+    /* If it is a capture, we need to remove the opponent piece as well. */
+    if (capture >= 0)
+    {
+        uint64_t to_remove_square = to_square;
+        if (piece == PAWN && to_square & state->en_passant)
+        {
+            /* The piece captured with en passant; we need to clear the board of the captured piece.
+                * We simply use the pawn move square of the opponent to find out which square to clear. */
+            to_remove_square = cached->moves_pawn_one[opponent][to];
+        }
 
-    switch (move->from_piece)
+        /* Remove the captured piece off the board. */
+        state->pieces[opponent][capture] ^= to_remove_square;
+        state->occupied[opponent] ^= to_remove_square;
+        state->square[LSB(to_remove_square)] = capture;
+    }
+
+    uint64_t rook_mask;
+    switch (piece)
     {
         case PAWN:
         case KNIGHT:
@@ -481,10 +493,17 @@ void move_unmake(state_t *state, move_t *move)
             break;
 
         case KING:
-            rook_mask = cached->castling_rookmask[state->turn][move->from_square_idx][move->to_square_idx];
-
+            rook_mask = cached->castling_rookmask[state->turn][from][to];
             state->pieces[state->turn][ROOK] ^= rook_mask;
             state->occupied[state->turn] ^= rook_mask;
+
+            for (;rook_mask; ClearLow(rook_mask))
+            {
+                int tmp = LSB(rook_mask);
+                state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+            }
+
+            state->king_idx[state->turn] = from;
             break;
     }
     

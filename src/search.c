@@ -6,18 +6,9 @@
 #include "eval.h"
 #include "hash.h"
 #include "plp.h"
+#include "sort.h"
 
 search_data_t search_data;
-
-int cmp_sort_captures(const void* a, const void* b)
-{
-    const move_t *move_a = (const void*) a;
-    const move_t *move_b = (const void*) b;
-
-    return (1024 * -(search_data.best_move_id == move_a->move_id)) + 
-           (1024 *  (search_data.best_move_id == move_b->move_id)) +
-           move_b->move_score - move_a->move_score;
-}
 
 void search_go(state_t *state, int max_depth)
 {
@@ -81,18 +72,18 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     if (depth > 1)
     {
-        qsort(moves, count, sizeof(move_t), cmp_sort_captures);
+        sort_moves(moves, count);
     }
 
     int i, legal_move = 0, best_move_id = -1;
     for (i = 0; i < count; ++i)
     {
-        move_make(state, &moves[i]);
+        move_make(state, &moves[i], ply);
 
         legal_move = 1;
 
         int eval = -search_ab(state, depth - 1, -beta, -alpha);
-        move_unmake(state, &moves[i]);
+        move_unmake(state, &moves[i], ply);
 
         if (eval == -AB_INVALID_NODE)
         {
@@ -101,7 +92,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
         if (eval >= beta)
         {
-            hash_add_node(state->zobrist, beta, depth, HASH_BETA, moves[i].move_id);
+            hash_add_node(state->zobrist, beta, depth, HASH_BETA, 0); // TODO: move_id
             return beta;
         }
         else if (eval > alpha)
@@ -109,7 +100,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
             alpha = eval;
             hash_type = HASH_EXACT;
 
-            best_move_id = moves[i].move_id;
+            // TODO: best_move_id = moves[i].move_id;
 
             memcpy(&search_data.pv[ply].move, &moves[i], sizeof(move_t));
             search_data.pv[ply].score = eval;

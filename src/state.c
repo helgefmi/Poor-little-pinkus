@@ -17,6 +17,7 @@ int state_init_from_fen(state_t *state, char *fen)
      * Returns the number of used characters from fen */
 
     memset(state, 0, sizeof(state_t));
+    memset(state->square, -1, 64 * sizeof(int));
 
     /* Set up the position. */
     int piece_idx = 8 * 7; /* Starting on the A8. */
@@ -39,6 +40,12 @@ int state_init_from_fen(state_t *state, char *fen)
             int piece = util_char_to_piece(c);
             int color = util_char_to_color(c);
             state->pieces[color][piece] |= (1ull << piece_idx);
+            state->square[piece_idx] = piece;
+            if (piece == KING)
+            {
+                state->king_idx[color] = piece_idx;
+            }
+
             piece_idx += 1;
         }
 

@@ -22,6 +22,10 @@ typedef struct
     uint64_t occupied_both;
 
     uint64_t zobrist;
+
+    int king_idx[2], square[64];
+
+    uint64_t old_castling[128], old_en_passant[128], old_zobrist[128];
 } state_t;
 
 struct move_t;

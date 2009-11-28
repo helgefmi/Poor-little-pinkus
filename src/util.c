@@ -25,11 +25,9 @@ int util_char_to_color(char piece_c)
 
 void util_chars_to_move(char *move_str, move_t *move, state_t *state)
 {
-    move->from_square_idx = util_chars_to_square(move_str);
-    move->from_square = (1ull << move->from_square_idx);
+    move->from = util_chars_to_square(move_str);
     move_str += 2;
-    move->to_square_idx = util_chars_to_square(move_str);
-    move->to_square = (1ull << move->to_square_idx);
+    move->to = util_chars_to_square(move_str);
     move_str += 2;
 
     move->promotion = -1;
@@ -39,27 +37,27 @@ void util_chars_to_move(char *move_str, move_t *move, state_t *state)
     }
 
     move->capture = -1;
-    move->from_piece = -1;
+    move->piece = -1;
 
     int color, piece;
     for (color = WHITE; color <= BLACK; ++color)
     {
         for (piece = PAWN; piece <= KING; ++piece)
         {
-            if (state->pieces[color][piece] & move->from_square)
+            if (state->pieces[color][piece] & (1ull << move->from))
             {
-                move->from_piece = piece;
+                move->piece = piece;
             }
-            if (state->pieces[color][piece] & move->to_square)
+            if (state->pieces[color][piece] & (1ull << move->to))
             {
                 move->capture = piece; 
             }
         }
     }
 
-    assert(move->from_piece >= 0);
+    assert(move->piece >= 0);
 
-    if (move->from_piece == PAWN && move->to_square & state->en_passant)
+    if (move->piece == PAWN && (1ull << move->to) & state->en_passant)
     {
         move->capture = PAWN;
     }

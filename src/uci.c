@@ -169,7 +169,7 @@ void uci_init_position(char *position)
 
                 move_t move;
                 util_chars_to_move(word, &move, uci_state);
-                move_make(uci_state, &move);
+                move_make(uci_state, &move, 0);
             }
         }
     }

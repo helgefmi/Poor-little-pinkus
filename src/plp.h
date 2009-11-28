@@ -25,6 +25,14 @@
 
 #define INF 99999999
 
+#define MoveFrom(move) move->from
+#define MoveTo(move) move->to
+#define MovePiece(move) move->piece
+#define MoveCapture(move) move->capture
+#define MovePromote(move) move->promotion
+
+#define ClearLow(x) ((x) &= (x) - 1)
+
 /* Headers for optimized versions of LSB, MSB and PopCnt */
 #if defined(__LP64__)
     #include "inline64.h"

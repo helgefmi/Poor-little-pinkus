@@ -34,10 +34,11 @@ void hash_init();
 void hash_destroy();
 void hash_set_tsize(int);
 void hash_wipe();
+int hash_get_move(uint64_t);
 
 uint64_t hash_make_zobrist(state_t*);
 
-int hash_probe(uint64_t, int, int, int, int*, int*);
+int hash_probe(uint64_t, int, int, int, int*);
 void hash_add_node(uint64_t, uint64_t, int, int, int);
 hash_node_t *hash_get_node(uint64_t);
 

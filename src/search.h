@@ -19,7 +19,6 @@ typedef struct
     uint64_t visited_nodes;
     int cache_hits, cache_misses;
     int max_depth;
-    int best_move_id;
 } search_data_t;
 
 extern search_data_t search_data;

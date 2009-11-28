@@ -93,21 +93,15 @@ void hash_set_tsize(int memsize)
     hash_wipe();
 }
 
-int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score, int *move)
+int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
 {
     hash_node_t *entry = hash_get_node(zobrist_key);
-    if (!entry || entry->hash != zobrist_key)
+    if (!entry || entry->hash != zobrist_key || entry->depth < depth )
     {
         return 0;
     }
 
-    *move = entry->move;
-
-    if (entry->depth < depth )
-    {
-        return 0;
-    }
-    else if (entry->type == HASH_EXACT)
+    if (entry->type == HASH_EXACT)
     {
         *score = entry->score;
         return 1;
@@ -146,6 +140,17 @@ void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type, in
     hash_table[idx].score = score;
     hash_table[idx].type = type;
     hash_table[idx].move = move;
+}
+
+int hash_get_move(uint64_t zobrist_key)
+{
+    hash_node_t *entry = hash_get_node(zobrist_key);
+    if (entry && entry->hash == zobrist_key)
+    {
+        return entry->move;
+    }
+
+    return 0;
 }
 
 hash_node_t *hash_get_node(uint64_t zobrist_key)

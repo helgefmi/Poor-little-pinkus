@@ -2,7 +2,8 @@
 #define _SORT_H
 
 #include "move.h"
+#include "state.h"
 
-void sort_moves(int*, int);
+void sort_moves(int*, int, state_t*);
 
 #endif

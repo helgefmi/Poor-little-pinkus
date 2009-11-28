@@ -35,8 +35,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     int score = 0,
         ply = search_data.max_depth - depth;
 
-    search_data.best_move_id = -1;
-    if (hash_probe(state->zobrist, depth, alpha, beta, &score, &search_data.best_move_id))
+    if (hash_probe(state->zobrist, depth, alpha, beta, &score))
     {
         ++search_data.cache_hits;
         if (ply > 0)
@@ -51,11 +50,6 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
     if (!depth)
     {
-        if (move_is_attacked(state, LSB(state->pieces[1 - state->turn][KING]), state->turn))
-        {
-            return AB_INVALID_NODE;
-        }
-
         return eval_state(state);
     }
 
@@ -65,34 +59,30 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     int count = 0;
     move_generate_moves(state, moves, &count);
 
-    if (count == -1)
+    if (depth > 1 && count > 1)
     {
-        return AB_INVALID_NODE;
+        sort_moves(moves, count, state);
     }
 
-    if (depth > 1)
-    {
-        sort_moves(moves, count);
-    }
-
-    int i, legal_move = 0, best_move_id = -1;
+    int i, legal_move = 0, best_move = 0;
     for (i = 0; i < count; ++i)
     {
         move_make(state, moves[i], ply);
+
+        if (move_is_attacked(state, LSB(state->pieces[1 - state->turn][KING]), state->turn))
+        {
+            move_unmake(state, moves[i], ply);
+            continue;
+        }
 
         legal_move = 1;
 
         int eval = -search_ab(state, depth - 1, -beta, -alpha);
         move_unmake(state, moves[i], ply);
 
-        if (eval == -AB_INVALID_NODE)
-        {
-            continue;
-        }
-
         if (eval >= beta)
         {
-            hash_add_node(state->zobrist, beta, depth, HASH_BETA, 0); // TODO: move_id
+            hash_add_node(state->zobrist, beta, depth, HASH_BETA, moves[i]);
             return beta;
         }
         else if (eval > alpha)
@@ -100,7 +90,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
             alpha = eval;
             hash_type = HASH_EXACT;
 
-            // TODO: best_move_id = moves[i].move_id;
+            best_move = moves[i];
 
             memcpy(&search_data.pv[ply].move, &moves[i], sizeof(int));
             search_data.pv[ply].score = eval;
@@ -115,7 +105,7 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
     }
     else
     {
-        hash_add_node(state->zobrist, alpha, depth, hash_type, best_move_id);
+        hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
     }
 
     return alpha;

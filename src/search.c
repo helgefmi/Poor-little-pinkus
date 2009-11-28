@@ -92,7 +92,11 @@ int search_ab(state_t *state, int depth, int alpha, int beta)
 
             best_move = moves[i];
 
-            search_data.best_score = eval;
+            if (ply == 0)
+            {
+                search_data.best_score = eval;
+            }
+
             search_data.pv[ply][ply] = moves[i];
             int ii;
             for (ii = ply + 1; ii < search_data.max_depth; ++ii)

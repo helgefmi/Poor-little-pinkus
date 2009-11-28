@@ -12,6 +12,8 @@ typedef struct
     int best_score;
     int max_depth;
 
+    int move_phase[128];
+
     uint64_t visited_nodes;
     int cache_hits, cache_misses;
 } search_data_t;

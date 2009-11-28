@@ -4,6 +4,6 @@
 #include "move.h"
 #include "state.h"
 
-void sort_moves(int*, int, state_t*);
+void sort_moves(int*, int);
 
 #endif

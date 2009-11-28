@@ -3,21 +3,15 @@
 #include "move.h"
 #include "plp.h"
 #include "util.h"
-#include "hash.h"
 
-void sort_moves(int *moves, int count, state_t *state)
+void sort_moves(int *moves, int count)
 {
     int sort_values[100];
     int i;
-    int hash_move = hash_get_move(state->zobrist);
 
     for (i = 0; i < count; ++i)
     {
-        if (moves[i] == hash_move)
-        {
-            sort_values[i] = 1024;
-        }
-        else if (MoveCapture(moves[i]) < 6)
+        if (MoveCapture(moves[i]) < 6)
         {
             sort_values[i] = 512 + (MoveCapture(moves[i]) - MovePiece(moves[i]));
         }

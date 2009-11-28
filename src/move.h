@@ -8,7 +8,6 @@
 #define MSCORE_PROMOTION 100
 
 void move_generate_moves(state_t*, int*, int*);
-uint64_t move_piece_moves(state_t*, int, int, int);
 int move_is_attacked(state_t*, int, int);
 
 void move_make(state_t*, int, int);

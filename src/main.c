@@ -10,6 +10,7 @@
 #include "eval.h"
 #include "bench.h"
 #include "plp.h"
+#include "move.h"
 
 void print_usage()
 {
@@ -103,12 +104,14 @@ int main(int argc, char **argv)
     cache_init();
     hash_init();
 
-    /*
+#if 0
     state_t tmp_state;
-    state_init_from_fen(&tmp_state, "4k3/4p3/4K3/8/8/8/8/8 b - - 0 1");
-    printf("%d\n", eval_state(&tmp_state));
+    state_init_from_fen(&tmp_state, "4k3/3pq3/bn2pnp1/2pP4/2B5/8/8/4K3 w - c6 0 1");
+    //move_make(&tmp_state, PackMove(LSB(C7), LSB(C5), PAWN, -1, -1), 99);
+    state_print(&tmp_state);
+    test_perft(&tmp_state, 2, 1);
     exit(1);
-    */
+#endif
 
     /* State will only be set up with -fen if we want perft/divide */
     state_t *state = 0;

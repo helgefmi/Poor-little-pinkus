@@ -28,16 +28,14 @@ typedef struct
             moves_rook[64],
 
     /* Used to efficiently find out if castling is available */
-            castling_availability[2][2][64],
+            castling_rooksq[2][2],
             castling_by_color[2],
             castling_rookmask[2][64][64],
 
-    /* Used to efficiently find out if there are any pieces blocking a castle */
-            castling_steps[2][2],
+            OO[2], OOO[2];
 
-    /* Used to efficiently find out if a pawn can promote (basically set to
-    * rank #8 for white and rank #1 for black) */
-            promotion_rank[2];
+    int OOsq[2][3], OOOsq[2][3];
+    int OOto[2], OOOto[2];
 
     int piece_to_int[256];
     char int_to_piece[2][6];

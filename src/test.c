@@ -19,8 +19,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
 
     if (depth == 0)
     {
-        int res = !move_is_attacked(state, LSB(state->pieces[1 - state->turn][KING]), state->turn);
-        return res;
+        return 1;
     }
 
     hash_node_t *hash_node = hash_get_node(state->zobrist);
@@ -55,6 +54,12 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     for (i = 0; i < count; ++i)
     {
         move_make(state, moves[i], depth);
+
+        if (move_is_attacked(state, state->king_idx[1 - state->turn], state->turn))
+        {
+            move_unmake(state, moves[i], depth);
+            continue;
+        }
 
         uint64_t res = test_perft_rec(state, depth - 1, 0);
         nodes += res;

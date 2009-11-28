@@ -31,24 +31,40 @@ void cache_init()
     cached->castling_by_color[0] = A1 | H1;
     cached->castling_by_color[1] = A8 | H8;
 
-    cached->castling_steps[0][0] = C1 | D1;
-    cached->castling_steps[0][1] = F1 | G1;
-    cached->castling_steps[1][0] = C8 | D8;
-    cached->castling_steps[1][1] = F8 | G8;
-
-    cached->promotion_rank[0] = A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8;
-    cached->promotion_rank[1] = A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1;
-
-    cached->castling_availability[WHITE][0][__builtin_ctzll(E1)] = A1;
-    cached->castling_availability[WHITE][1][__builtin_ctzll(E1)] = H1;
-    cached->castling_availability[BLACK][0][__builtin_ctzll(E8)] = A8;
-    cached->castling_availability[BLACK][1][__builtin_ctzll(E8)] = H8;
+    cached->castling_rooksq[WHITE][0] = A1;
+    cached->castling_rooksq[WHITE][1] = H1;
+    cached->castling_rooksq[BLACK][0] = A8;
+    cached->castling_rooksq[BLACK][1] = H8;
 
     cached->castling_rookmask[WHITE][4][2] = A1 | D1;
     cached->castling_rookmask[WHITE][4][6] = F1 | H1;
 
     cached->castling_rookmask[BLACK][7* 8 + 4][7 * 8 + 2] = A8 | D8;
     cached->castling_rookmask[BLACK][7* 8 + 4][7 * 8 + 6] = F8 | H8;
+
+    cached->OO[0] = G1 | F1;
+    cached->OO[1] = G8 | F8;
+    cached->OOO[0] = B1 | C1 | D1;
+    cached->OOO[1] = B8 | C8 | D8;
+
+    cached->OOto[WHITE] = 6;
+    cached->OOto[BLACK] = 62;
+    cached->OOOto[WHITE] = 2;
+    cached->OOOto[BLACK] = 58;
+
+    cached->OOOsq[WHITE][0] = 2;
+    cached->OOOsq[WHITE][1] = 3;
+    cached->OOOsq[WHITE][2] = 4;
+    cached->OOOsq[BLACK][0] = 58;
+    cached->OOOsq[BLACK][1] = 59;
+    cached->OOOsq[BLACK][2] = 60;
+
+    cached->OOsq[WHITE][0] = 4;
+    cached->OOsq[WHITE][1] = 5;
+    cached->OOsq[WHITE][2] = 6;
+    cached->OOsq[BLACK][0] = 60;
+    cached->OOsq[BLACK][1] = 61;
+    cached->OOsq[BLACK][2] = 62;
 
     int y, x, y2, x2;
     int i;

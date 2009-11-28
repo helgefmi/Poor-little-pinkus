@@ -66,6 +66,9 @@ void cache_init()
     cached->OOsq[BLACK][1] = 61;
     cached->OOsq[BLACK][2] = 62;
 
+    cached->promote[WHITE] = A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8;
+    cached->promote[BLACK] = A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1;
+
     int y, x, y2, x2;
     int i;
     int ydir, xdir, dir;

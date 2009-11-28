@@ -16,7 +16,7 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
     switch (search_data.move_phase[ply])
     {
         case PHASE_HASH:
-            search_data.move_phase[ply] = PHASE_MOVES;
+            search_data.move_phase[ply] = PHASE_TACTICAL;
             hash_move = hash_get_move(state->zobrist);
             if (hash_move)
             {
@@ -29,21 +29,17 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
             }
             return 1;
 
-        case PHASE_CAPTURES:
+        case PHASE_TACTICAL:
             search_data.move_phase[ply] = PHASE_MOVES;
-            return 1;
-
-        case PHASE_MOVES:
-            search_data.move_phase[ply] = PHASE_END;
-            move_generate_moves(state, movebuf, count);
+            move_generate_tactical(state, movebuf, count);
 
             if (*count < 2)
                 return 1;
 
-            hash_move = hash_get_move(state->zobrist);
-
             if (depth > 1)
             {
+                hash_move = hash_get_move(state->zobrist);
+
                 /* Sort */
                 end = movebuf + *count - 1;
                 for (move = movebuf, sortv = sort_values; move <= end; ++move, ++sortv)
@@ -84,6 +80,29 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
                 if (hash_move)
                 {
                     *count -= 1;
+                }
+            }
+            return 1;
+
+        case PHASE_MOVES:
+            search_data.move_phase[ply] = PHASE_END;
+            move_generate_moves(state, movebuf, count);
+
+            hash_move = hash_get_move(state->zobrist);
+            if (*count > 1 && MoveCapture(hash_move))
+            {
+                /* Remove hash_move as we've used this one in PHASE_HASH already */
+                end = movebuf + *count;
+                for (move = movebuf; move < end; ++move)
+                {
+                    if (*move == hash_move)
+                    {
+                        for (sortv = move + 1; sortv < end; ++sortv, ++move)
+                        {
+                            *move = *sortv;
+                        }
+                        break;
+                    }
                 }
             }
 

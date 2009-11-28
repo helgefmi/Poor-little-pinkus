@@ -23,6 +23,9 @@ typedef struct
     /* Bishop, Rooks and Queen moves can be combined from rays going in every direction. */
             directions[8][65],
 
+    /* Maps the rank where a pawn would be promoted for that color */
+            promote[2],
+
     /* We use "directions" to calculate these as well */
             moves_bishop[64],
             moves_rook[64],

@@ -4,7 +4,7 @@
 #include "state.h"
 
 #define PHASE_HASH 0
-#define PHASE_CAPTURES 1
+#define PHASE_TACTICAL 1
 #define PHASE_MOVES 2
 #define PHASE_END 3
 

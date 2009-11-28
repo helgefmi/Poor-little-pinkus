@@ -11,7 +11,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
 {
     register int from, to;
     register uint64_t pieces, moves;
-    register uint64_t not_occupied = ~state->occupied[state->turn];
+    register uint64_t not_occupied = ~state->occupied_both;
     register uint64_t *my_pieces = state->pieces[state->turn];
 
     /* CASTLING */
@@ -50,7 +50,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, KNIGHT, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, KNIGHT, -1, -1);
             (*count)++;
         }
     }
@@ -69,7 +69,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, BISHOP, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, BISHOP, -1, -1);
             (*count)++;
         }
     }
@@ -88,7 +88,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, ROOK, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, ROOK, -1, -1);
             (*count)++;
         }
     }
@@ -111,6 +111,123 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
+            *movebuf++ = PackMove(from, to, QUEEN, -1, -1);
+            (*count)++;
+        }
+    }
+
+    /* PAWN */
+    for (pieces = my_pieces[PAWN]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & ~cached->promote[state->turn];
+        if (moves)
+        {
+            moves = cached->moves_pawn_two[state->turn][from] & ~state->occupied_both;
+        }
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
+
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
+    /* KING */
+    from = state->king_idx[state->turn];
+    moves = cached->moves_king[from] & not_occupied;
+
+    for (; moves; ClearLow(moves))
+    {
+        to = LSB(moves);
+        *movebuf++ = PackMove(from, to, KING, -1, -1);
+        (*count)++;
+    }
+}
+
+void move_generate_tactical(state_t *state, int *movebuf, int *count)
+{
+    register int from, to;
+    register uint64_t pieces, moves;
+    register uint64_t target = state->occupied[1 - state->turn];
+    register uint64_t *my_pieces = state->pieces[state->turn];
+
+    /* CASTLING */
+
+    *count = 0;
+
+    /* KNIGHT */
+    for (pieces = my_pieces[KNIGHT]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->moves_knight[from] & target;
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
+            *movebuf++ = PackMove(from, to, KNIGHT, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
+    /* BISHOP */
+    for (pieces = my_pieces[BISHOP]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->moves_bishop[from]
+                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & target;
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
+            *movebuf++ = PackMove(from, to, BISHOP, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
+    /* ROOK */
+    for (pieces = my_pieces[ROOK]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->moves_rook[from]
+                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & target;
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
+            *movebuf++ = PackMove(from, to, ROOK, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
+    /* QUEEN */
+    for (pieces = my_pieces[QUEEN]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = (cached->moves_rook[from] | cached->moves_bishop[from])
+                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & target;
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
             *movebuf++ = PackMove(from, to, QUEEN, state->square[to], -1);
             (*count)++;
         }
@@ -120,18 +237,14 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     for (pieces = my_pieces[PAWN]; pieces; ClearLow(pieces))
     {
         from = LSB(pieces);
-        moves = cached->moves_pawn_one[state->turn][from] & ~state->occupied_both;
-        if (moves)
-        {
-            moves = cached->moves_pawn_two[state->turn][from] & ~state->occupied_both;
-        }
-        moves |= cached->attacks_pawn[state->turn][from] & state->occupied[1 - state->turn];
+        moves = (cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & cached->promote[state->turn])
+                | (cached->attacks_pawn[state->turn][from] & state->occupied[1 - state->turn]);
 
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
 
-            if ((state->turn == WHITE && to >= 56) || (state->turn == BLACK && to < 8))
+            if ((1ull << to) & cached->promote[state->turn])
             {
                 *movebuf++ = PackMove(from, to, PAWN, state->square[to], QUEEN);
                 (*count)++;
@@ -159,7 +272,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
 
     /* KING */
     from = state->king_idx[state->turn];
-    moves = cached->moves_king[from] & not_occupied;
+    moves = cached->moves_king[from] & target;
 
     for (; moves; ClearLow(moves))
     {
@@ -168,7 +281,6 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         (*count)++;
     }
 }
-
 int move_is_attacked(state_t *state, int square_idx, int attacker)
 {
     /* Checks if a set of squares are currently attacked by an attackers pieces */

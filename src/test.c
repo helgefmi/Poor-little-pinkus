@@ -38,9 +38,11 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     }
 
     int moves[100];
-    int count = 0;
+    int count = 0, count2 = 0;
 
     move_generate_moves(state, moves, &count);
+    move_generate_tactical(state, moves + count, &count2);
+    count += count2;
 
     /* Check for invalid position or board with no pieces :) */
     if (count <= 0)

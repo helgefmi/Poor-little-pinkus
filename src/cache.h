@@ -25,6 +25,7 @@ typedef struct
 
     /* Maps the rank where a pawn would be promoted for that color */
             promote[2],
+            promote_from[2],
 
     /* We use "directions" to calculate these as well */
             moves_bishop[64],

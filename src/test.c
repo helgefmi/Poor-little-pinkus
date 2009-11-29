@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "plp.h"
 #include "util.h"
+#include "make.h"
 
 static uint64_t _cache_hits = 0, _cache_misses = 0;
 uint64_t test_perft_rec(state_t *state, int depth, int verbose)
@@ -55,11 +56,11 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     int i;
     for (i = 0; i < count; ++i)
     {
-        move_make(state, moves[i], depth);
+        make_move(state, moves[i], depth);
 
         if (move_is_attacked(state, state->king_idx[1 - state->turn], state->turn))
         {
-            move_unmake(state, moves[i], depth);
+            unmake_move(state, moves[i], depth);
             continue;
         }
 
@@ -73,7 +74,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
             printf("%s: %lld\n", move_str, res);
         }
 
-        move_unmake(state, moves[i], depth);
+        unmake_move(state, moves[i], depth);
     }
 
     hash_add_node(state->zobrist, nodes, depth, 0, 0);

@@ -11,6 +11,7 @@
 #include "search.h"
 #include "move.h"
 #include "timectrl.h"
+#include "make.h"
 
 #define DEFAULT_HASH_SIZE 256
 #define MAX_HASH_SIZE 2048
@@ -115,7 +116,7 @@ void uci_halt_search()
 
 void uci_bestmove()
 {
-    if (!search_data.pv[0])
+    if (!search.pv[0])
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
         printf("bestmove 0000\n");
@@ -124,7 +125,7 @@ void uci_bestmove()
     else
     {
         char buf[16];
-        util_move_to_lan(search_data.pv[0][0], buf);
+        util_move_to_lan(search.pv[0][0], buf);
         uci_debug("giving out best move:");
         uci_debug(buf);
         printf("bestmove %s\n", buf);
@@ -168,7 +169,7 @@ void uci_init_position(char *position)
                 position += strlen(word) + 1;
 
                 int move = util_chars_to_move(word, uci_state);
-                move_make(uci_state, move, 0);
+                make_move(uci_state, move, 0);
             }
         }
     }

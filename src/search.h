@@ -15,10 +15,11 @@ typedef struct
     int move_phase[128];
 
     uint64_t visited_nodes;
+    uint64_t qs_visited_nodes;
     int cache_hits, cache_misses;
 } search_data_t;
 
-extern search_data_t search_data;
+extern search_data_t search;
 
 void search_go(state_t*, int);
 

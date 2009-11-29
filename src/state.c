@@ -16,13 +16,16 @@ int state_init_from_fen(state_t *state, char *fen)
      *
      * Returns the number of used characters from fen */
 
+    int piece_idx = 8 * 7; /* Starting on the A8. */
+    int i = 0;
+    int color, piece;
+    char num[16];
+    int res;
+
     memset(state, 0, sizeof(state_t));
     memset(state->square, -1, 64 * sizeof(int));
 
     /* Set up the position. */
-    int piece_idx = 8 * 7; /* Starting on the A8. */
-
-    int i = 0;
     while (fen[i] && fen[i] != ' ')
     {
         char c = fen[i];
@@ -55,7 +58,6 @@ int state_init_from_fen(state_t *state, char *fen)
     ++i;
 
     /* Update state->occupied with the occupied squares in state->pieces. */
-    int color, piece;
     for (color = 0; color < 2; ++color)
     {
         for (piece = 0; piece < 6; ++piece)
@@ -115,8 +117,6 @@ int state_init_from_fen(state_t *state, char *fen)
 
     /* TODO: Halfmove and Fullmove numbers from FEN. */
     /* Halfmove */
-    char num[16];
-    int res;
 
     res = sscanf(&fen[i], "%s", num);
     if (1 == res && num[0] != '-')
@@ -147,14 +147,35 @@ int state_init_from_fen(state_t *state, char *fen)
     return i;
 }
 
+int state_is_repeating(state_t *state)
+{
+    int i;
+
+    if (state->moves < 10)
+    {
+        return 0;
+    }
+
+    for (i = state->moves - 3; i >= state->last_pawn_or_cap; i -= 2)
+    {
+        if (state->repetition[i] == state->zobrist)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 void state_print(state_t *state)
 {
     /*Makes a pretty string, representing a position.*/
 
     char *seperator = "+---+---+---+---+---+---+---+---+\n";
+    int y, x;
+
     printf("%s", seperator);
 
-    int y, x;
     for (y = 7; y >= 0; --y)
     {
         printf("|");

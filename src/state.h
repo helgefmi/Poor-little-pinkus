@@ -25,10 +25,17 @@ typedef struct
 
     int king_idx[2], square[64];
 
-    uint64_t old_castling[128], old_en_passant[128], old_zobrist[128];
+    int last_pawn_or_cap;
+    uint64_t repetition[256];
+    int moves;
+
+    uint64_t old_castling[256], old_en_passant[256], old_zobrist[256];
+    uint64_t old_pawn_or_cap[256];
 } state_t;
 
 int state_init_from_fen(state_t*, char*);
 void state_print(state_t*);
+
+int state_is_repeating(state_t*);
 
 #endif

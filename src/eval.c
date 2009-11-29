@@ -2,7 +2,7 @@
 #include "plp.h"
 #include "state.h"
 
-static int eval_piece_values[6] = {10, 30, 31, 50, 90, 500};
+int eval_piece_values[6] = {10, 30, 31, 50, 90, 500};
 
 int eval_state(state_t *state)
 {

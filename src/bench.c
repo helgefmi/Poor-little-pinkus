@@ -17,8 +17,8 @@ static char* benchmarks[NUM_BENCHES] = {
 };
 
 int depths[NUM_BENCHES] = {
-    9, 9, 12,
-    8, 8, 7
+    8, 8, 14,
+    8, 5, 8
 };
 
 void bench_start(int depth)
@@ -39,9 +39,9 @@ void bench_start(int depth)
         hash_wipe();
         timectrl_go(&state, 0, 0, 0, depth ? depth : depths[i], 0, 0, 0);
 
-        total_nodes += search_data.visited_nodes;
-        cache_hits += search_data.cache_hits;
-        cache_misses += search_data.cache_misses;
+        total_nodes += search.visited_nodes;
+        cache_hits += search.cache_hits;
+        cache_misses += search.cache_misses;
 
         printf(".");
         fflush(stdout);

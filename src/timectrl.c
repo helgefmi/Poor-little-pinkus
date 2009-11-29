@@ -16,7 +16,7 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, in
 
     if (!depth)
     {
-        depth = 8;
+        depth = 9;
     }
 
     timecontrol.wtime = wtime;
@@ -60,27 +60,27 @@ void timectrl_alarm(int n)
         spent_time /= 1000000.0;
 
         printf("info nodes %llu nps %d",
-            search_data.visited_nodes, (int)(search_data.visited_nodes / spent_time));
+            search.visited_nodes, (int)(search.visited_nodes / spent_time));
 
-        if (search_data.pv[0][0])
+        if (search.pv[0][0])
         {
-            printf(" depth %d score cp %d time %d pv", search_data.max_depth, search_data.best_score, (int)spent_time * 1000);
+            printf(" depth %d score cp %d time %d pv", search.max_depth, search.best_score, (int)spent_time * 1000);
 
             int i;
             for (i = 0; i < 128; ++i)
             {
-                if (!search_data.pv[0][i])
+                if (!search.pv[0][i])
                 {
                     break;
                 }
 
                 char buf[16];
-                util_move_to_lan(search_data.pv[0][i], buf);
+                util_move_to_lan(search.pv[0][i], buf);
                 printf(" %s", buf);
             }
         }
 
-        printf(" cachehits %d cachemisses %d", search_data.cache_hits, search_data.cache_misses);
+        printf(" cachehits %d cachemisses %d", search.cache_hits, search.cache_misses);
 
         printf("\n");
         fflush(stdout);

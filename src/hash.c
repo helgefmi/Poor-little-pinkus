@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "search.h"
 #include "hash.h"
 #include "plp.h"
 
@@ -19,10 +20,10 @@ static void _init_zobrist()
 {
     /* Initializes the random values we'll use for making zobrist keys.
      * Different srand seeds will give different results */
+    int piece, color, idx;
 
     memset(hash_zobrist, 0, sizeof(hash_zobrist_t));
 
-    int piece, color, idx;
     for (color = WHITE; color <= BLACK; ++color)
     {
         for (piece = PAWN; piece <= KING; ++piece)
@@ -78,12 +79,12 @@ void hash_destroy()
 
 void hash_set_tsize(int memsize)
 {
+    int tsize = (memsize * 1024 * 1024) / sizeof(hash_node_t);
+
     if (hash_table)
     {
         free(hash_table);
     }
-
-    int tsize = (memsize * 1024 * 1024) / sizeof(hash_node_t);
 
     /* Convert to a power of two */
     tsize = 1 << MSB(tsize);
@@ -98,8 +99,11 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
     hash_node_t *entry = hash_get_node(zobrist_key);
     if (!entry || entry->hash != zobrist_key || entry->depth < depth )
     {
+        ++search.cache_hits;
         return 0;
     }
+
+    ++search.cache_misses;
 
     if (entry->type == HASH_EXACT)
     {
@@ -128,12 +132,14 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
 
 void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type, int move)
 {
+    int idx;
+
     if (!_hash_mask)
     {
         return;
     }
 
-    int idx = zobrist_key & _hash_mask;
+    idx = zobrist_key & _hash_mask;
 
     hash_table[idx].hash = zobrist_key;
     hash_table[idx].depth = depth;
@@ -155,13 +161,15 @@ int hash_get_move(uint64_t zobrist_key)
 
 hash_node_t *hash_get_node(uint64_t zobrist_key)
 {
+    int idx;
+
     if (!_hash_mask)
     {
         return NULL;
     }
 
     /* The returned node must be checked to see if the zobrist keys are matching. */
-    int idx = zobrist_key & _hash_mask;
+    idx = zobrist_key & _hash_mask;
     return &hash_table[idx];
 }
 
@@ -171,8 +179,9 @@ uint64_t hash_make_zobrist(state_t *state)
     /* Makes a zobrist key from scratch, given a state.
      * Should only be called once, when initializing a new state */
     uint64_t ret = 0;
-
     int color, piece;
+    uint64_t castling;
+
     for (color = WHITE; color <= BLACK; ++color)
     {
         for (piece = PAWN; piece <= KING; ++piece)
@@ -194,8 +203,7 @@ uint64_t hash_make_zobrist(state_t *state)
         ret ^= hash_zobrist->en_passant[en_passant_idx];
     }
 
-
-    uint64_t castling = state->castling;
+    castling = state->castling;
     while (castling)
     {
         int castling_idx = LSB(castling & -castling);

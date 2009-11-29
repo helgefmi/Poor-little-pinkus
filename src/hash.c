@@ -99,11 +99,11 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
     hash_node_t *entry = hash_get_node(zobrist_key);
     if (!entry || entry->hash != zobrist_key || entry->depth < depth )
     {
-        ++search.cache_hits;
+        ++search.cache_misses;
         return 0;
     }
 
-    ++search.cache_misses;
+    ++search.cache_hits;
 
     if (entry->type == HASH_EXACT)
     {

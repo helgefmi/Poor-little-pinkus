@@ -34,6 +34,8 @@
 #define PackMove(from, to, piece, capture, promote) (from | ((to & 63) << 6) | ((piece & 7) << 12) | ((capture & 7) << 15) | ((promote & 7) << 18))
 
 #define ClearLow(x) ((x) &= (x) - 1)
+#define Flip(x) ((x)^1)
+#define Abs(x) ((x) >= 0 ? (x) : -(x))
 
 /* Headers for optimized versions of LSB, MSB and PopCnt */
 #if defined(__LP64__)

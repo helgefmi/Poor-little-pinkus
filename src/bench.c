@@ -17,8 +17,8 @@ static char* benchmarks[NUM_BENCHES] = {
 };
 
 int depths[NUM_BENCHES] = {
-    8, 8, 14,
-    8, 5, 8
+    11, 9, 14,
+    9, 9, 9
 };
 
 void bench_start(int depth)

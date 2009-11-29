@@ -3,7 +3,10 @@
 
 #include "state.h"
 
-void unmake_move(state_t*, int, int);
 void make_move(state_t*, int, int);
+void unmake_move(state_t*, int, int);
+
+void make_null_move(state_t*, int);
+void unmake_null_move(state_t*, int);
 
 #endif

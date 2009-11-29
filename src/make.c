@@ -3,6 +3,32 @@
 #include "hash.h"
 #include "cache.h"
 
+void make_null_move(state_t *state, int ply)
+{
+    state->old_en_passant[ply] = state->en_passant;
+
+    state->turn ^= 1;
+    state->zobrist ^= hash_zobrist->turn;
+    if (state->en_passant)
+    {
+        state->en_passant = 0;
+        state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
+    }
+}
+
+void unmake_null_move(state_t *state, int ply)
+{
+    state->en_passant = state->old_en_passant[ply];
+
+    state->turn ^= 1;
+    state->zobrist ^= hash_zobrist->turn;
+    if (state->en_passant)
+    {
+        state->en_passant = 0;
+        state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
+    }
+}
+
 void make_move(state_t *state, int move, int ply)
 {
     uint64_t from_square, to_square;
@@ -24,7 +50,7 @@ void make_move(state_t *state, int move, int ply)
 
     from_square = 1ull << from;
     to_square = 1ull << to;
-    opponent = 1 - state->turn;
+    opponent = Flip(state->turn);
 
     /* Remove the piece that moved from the board. */
     state->pieces[state->turn][piece] &= ~from_square;

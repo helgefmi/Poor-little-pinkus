@@ -58,7 +58,7 @@ uint64_t test_perft_rec(state_t *state, int depth, int verbose)
     {
         make_move(state, moves[i], depth);
 
-        if (move_is_attacked(state, state->king_idx[1 - state->turn], state->turn))
+        if (move_is_attacked(state, state->king_idx[Flip(state->turn)], state->turn))
         {
             unmake_move(state, moves[i], depth);
             continue;

@@ -50,7 +50,7 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
     {
         make_move(state, *move, ply);
 
-        if (move_is_attacked(state, state->king_idx[1 - state->turn], state->turn))
+        if (move_is_attacked(state, state->king_idx[Flip(state->turn)], state->turn))
         {
             unmake_move(state, *move, ply);
             continue;

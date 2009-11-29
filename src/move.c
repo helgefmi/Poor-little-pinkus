@@ -21,9 +21,9 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     {
         if ((state->castling & cached->castling_rooksq[state->turn][1]) &&
             !(state->occupied_both & cached->OO[state->turn]) &&
-            !move_is_attacked(state, cached->OOsq[state->turn][0], 1 - state->turn) &&
-            !move_is_attacked(state, cached->OOsq[state->turn][1], 1 - state->turn) &&
-            !move_is_attacked(state, cached->OOsq[state->turn][2], 1 - state->turn))
+            !move_is_attacked(state, cached->OOsq[state->turn][0], Flip(state->turn)) &&
+            !move_is_attacked(state, cached->OOsq[state->turn][1], Flip(state->turn)) &&
+            !move_is_attacked(state, cached->OOsq[state->turn][2], Flip(state->turn)))
         {
             *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOto[state->turn], KING, -1, -1);
             (*count)++;
@@ -31,9 +31,9 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
 
         if ((state->castling & cached->castling_rooksq[state->turn][0]) &&
             !(state->occupied_both & cached->OOO[state->turn]) &&
-            !move_is_attacked(state, cached->OOOsq[state->turn][0], 1 - state->turn) &&
-            !move_is_attacked(state, cached->OOOsq[state->turn][1], 1 - state->turn) &&
-            !move_is_attacked(state, cached->OOOsq[state->turn][2], 1 - state->turn))
+            !move_is_attacked(state, cached->OOOsq[state->turn][0], Flip(state->turn)) &&
+            !move_is_attacked(state, cached->OOOsq[state->turn][1], Flip(state->turn)) &&
+            !move_is_attacked(state, cached->OOOsq[state->turn][2], Flip(state->turn)))
         {
             *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOOto[state->turn], KING, -1, -1);
             (*count)++;
@@ -151,7 +151,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
 {
     int from, to;
     uint64_t pieces, moves;
-    uint64_t target = state->occupied[1 - state->turn];
+    uint64_t target = state->occupied[Flip(state->turn)];
     uint64_t *my_pieces = state->pieces[state->turn];
 
     *count = 0;
@@ -161,13 +161,13 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = (cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & cached->promote[state->turn])
-                | (cached->attacks_pawn[state->turn][from] & state->occupied[1 - state->turn]);
+                | (cached->attacks_pawn[state->turn][from] & state->occupied[Flip(state->turn)]);
 
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
 
-            if ((1ull << to) & cached->promote[state->turn])
+            if (moves & -moves & cached->promote[state->turn])
             {
                 *movebuf++ = PackMove(from, to, PAWN, state->square[to], QUEEN);
                 (*count)++;

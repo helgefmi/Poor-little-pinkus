@@ -127,3 +127,15 @@ void util_move_to_lan(int move, char *out)
     out[i++] = '\0';
 }
 
+int util_legal_killer(state_t *state, int move)
+{
+    /* Check From and Piece */
+    if (!(state->pieces[state->turn][MovePiece(move)] & (1ull << MoveFrom(move))))
+        return 0;
+
+    /* Killers can't be captures */
+    if (state->square[MoveTo(move)] != -1)
+        return 0;
+
+    return 1;
+}

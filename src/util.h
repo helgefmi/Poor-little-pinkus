@@ -15,6 +15,7 @@ char util_piece_to_char(int, int);
 void util_int_to_bitmap(uint64_t);
 int util_chars_to_move(char*, state_t*);
 void util_move_to_lan(int, char*);
+int util_legal_killer(state_t*, int);
 
 char *util_trim_str(char*);
 

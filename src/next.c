@@ -5,6 +5,7 @@
 #include "move.h"
 #include "search.h"
 #include "hash.h"
+#include "util.h"
 #include "plp.h"
 
 int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
@@ -28,7 +29,7 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
             return 1;
 
         case PHASE_TACTICAL:
-            search.move_phase[ply] = PHASE_MOVES;
+            search.move_phase[ply] = PHASE_KILLER1;
             move_generate_tactical(state, movebuf, count);
 
             if (*count < 2)
@@ -44,6 +45,32 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
                 {
                     *count -= 1;
                 }
+            }
+            return 1;
+
+        case PHASE_KILLER1:
+            search.move_phase[ply] = PHASE_KILLER2;
+            if (Killer1(ply) && util_legal_killer(state, Killer1(ply)))
+            {
+                *movebuf = Killer1(ply);
+                *count = 1;
+            }
+            else
+            {
+                *count = 0;
+            }
+            return 1;
+
+        case PHASE_KILLER2:
+            search.move_phase[ply] = PHASE_MOVES;
+            if (Killer2(ply) && util_legal_killer(state, Killer2(ply)))
+            {
+                *movebuf = Killer2(ply);
+                *count = 1;
+            }
+            else
+            {
+                *count = 0;
             }
             return 1;
 

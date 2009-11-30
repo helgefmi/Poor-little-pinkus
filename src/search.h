@@ -21,6 +21,8 @@ typedef struct
 
     int in_endgame;
     int can_nullmove[MAX_DEPTH];
+
+    int killers[MAX_DEPTH][2];
 } search_data_t;
 
 extern search_data_t search;

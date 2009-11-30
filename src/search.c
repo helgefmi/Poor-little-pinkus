@@ -73,10 +73,15 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
     /* Null move */
     if (search.can_nullmove[ply] && depth > 2 && !search.in_endgame && !in_check)
     {
+        /* To prevent double null moves */
         search.can_nullmove[ply + 1] = 0;
 
+        int R = 2;
+        //if (depth > 3)
+        //    R = 3;
+
         make_null_move(state, ply);
-        int eval = -search_ab(state, depth - 3, ply + 1, -beta, -beta + 1);
+        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1);
         unmake_null_move(state, ply);
 
         if (eval >= beta)
@@ -84,7 +89,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
     }
     else
     {
-        /* To prevent double null moves */
+        /* Allow null moves every 2 plies */
         search.can_nullmove[ply + 1] = 1;
     }
 

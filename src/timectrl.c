@@ -20,6 +20,9 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, ui
         depth = 9;
     }
 
+    if (infinite)
+        depth = 200;
+
     timecontrol.verbose = verbose;
     timecontrol.nodes = nodes;
     timecontrol.depth = depth;

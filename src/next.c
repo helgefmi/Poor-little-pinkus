@@ -39,12 +39,6 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
             {
                 hash_move = hash_get_move(state->zobrist);
                 move_sort_captures(movebuf, *count, hash_move);
-
-                /* hash_move should be at the end of the move buffer at this point */
-                if (hash_move)
-                {
-                    *count -= 1;
-                }
             }
             return 1;
 

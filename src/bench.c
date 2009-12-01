@@ -43,17 +43,16 @@ void bench_start(int depth)
         cache_hits += search.cache_hits;
         cache_misses += search.cache_misses;
 
-        printf(".");
+        gettimeofday(&now, 0);
+
+        double spent_time;
+        spent_time = now.tv_sec - start_time.tv_sec;
+        spent_time *= 1000000;
+        spent_time += (now.tv_usec - start_time.tv_usec);
+
+        printf("Time: %.2f, Nodes: %.2fM, nps: %.2fM\n", spent_time / 1000000.0, total_nodes / 1000000.0, total_nodes/spent_time);
+        printf("Cache hitrate: %.2f\n\n", 100 * (cache_hits / (cache_hits + cache_misses)));
+
         fflush(stdout);
     }
-
-    gettimeofday(&now, 0);
-
-    double spent_time;
-    spent_time = now.tv_sec - start_time.tv_sec;
-    spent_time *= 1000000;
-    spent_time += (now.tv_usec - start_time.tv_usec);
-
-    printf("\n\nTime: %f, Nodes: %.2fM, nps: %.2fM\n", spent_time / 1000000.0, total_nodes / 1000000.0, total_nodes/spent_time);
-    printf("Cache hitrate: %.2f\n", 100 * (cache_hits / (cache_hits + cache_misses)));
 }

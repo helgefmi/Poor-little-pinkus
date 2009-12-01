@@ -222,5 +222,8 @@ uint64_t hash_make_zobrist(state_t *state)
 
 void hash_wipe()
 {
-    memset(hash_table, 0, sizeof(hash_node_t) * (_hash_mask + 1));
+    if (hash_table)
+    {
+        memset(hash_table, 0, sizeof(hash_node_t) * (_hash_mask + 1));
+    }
 }

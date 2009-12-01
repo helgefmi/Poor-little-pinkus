@@ -11,6 +11,7 @@
 #include "next.h"
 #include "quiescence.h"
 #include "make.h"
+#include "timectrl.h"
 
 search_data_t search;
 
@@ -48,6 +49,9 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
     int moves[100];
     int score = 0;
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
+
+    if (timectrl_should_halt())
+        return 0;
 
     ++search.visited_nodes;
 

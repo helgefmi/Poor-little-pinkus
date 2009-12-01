@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -10,22 +11,25 @@
 
 timecontrol_t timecontrol;
 
-void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, int nodes, int infinite, int verbose)
+void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, uint64_t nodes, int infinite, int verbose)
 {
     memset(&timecontrol, 0, sizeof(timecontrol_t));
 
     if (!depth)
     {
-        depth = 10;
+        depth = 9;
     }
 
+    timecontrol.verbose = verbose;
+    timecontrol.nodes = nodes;
+    timecontrol.depth = depth;
+
+    timecontrol.search_time_left = 0;
+    timecontrol.ponder = ponder;
     timecontrol.wtime = wtime;
     timecontrol.btime = btime;
-    timecontrol.ponder = ponder;
-    timecontrol.depth = depth;
-    timecontrol.nodes = nodes;
     timecontrol.infinite = infinite;
-    timecontrol.verbose = verbose;
+    timecontrol.input_timer = INPUT_INTERVAL;
 
     signal(SIGALRM, timectrl_alarm);
 
@@ -46,7 +50,11 @@ void timectrl_alarm(int n)
     }
 
     n = 0;
-    --timecontrol.search_time_left;
+
+    if (timecontrol.search_time_left)
+    {
+        --timecontrol.search_time_left;
+    }
 
     if (timecontrol.verbose)
     {
@@ -91,15 +99,45 @@ void timectrl_alarm(int n)
 
 int timectrl_should_halt()
 {
-    if (timecontrol.searching)
+    fd_set rdfs;
+    struct timeval tv;
+    int ret;
+
+    if (timecontrol.input_timer-- == 0)
+    {
+        timecontrol.input_timer = INPUT_INTERVAL;
+        FD_ZERO(&rdfs);
+        FD_SET(0, &rdfs);
+
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        ret = select(1, &rdfs, NULL, NULL, &tv);
+
+        if (ret == -1)
+        {
+        }
+        else if (ret)
+        {
+            uci_input();
+        }
+    }
+
+    if (!timecontrol.searching)
+    {
+        return 1;
+    }
+    if (timecontrol.nodes && search.visited_nodes > timecontrol.nodes)
     {
         return 1;
     }
 
-    if (timecontrol.search_time_left <= 0)
+#if 0
+    if (!timecontrol.search_time_left)
     {
         return 1;
     }
+#endif
 
     return 0;
 }

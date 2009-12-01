@@ -7,21 +7,26 @@
 #include "plp.h"
 #include "cache.h"
 #include "make.h"
+#include "timectrl.h"
 
 int quiescence(state_t *state, int ply, int alpha, int beta)
 {
     int *move, *end, eval;
     int moves[100], count, test;
 
+    if (timectrl_should_halt())
+        return 0;
+
     ++search.qs_visited_nodes;
 
+    /* Handle repetition */
     if (state_is_repeating(state))
     {
         return 0;
     }
 
+    /* Stand pat value */
     eval = eval_state(state);
-
 
     /* If it's hopeless for alpha, we can exit early */
     test = eval + eval_piece_values[QUEEN];

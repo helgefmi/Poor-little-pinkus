@@ -68,7 +68,6 @@ void uci_parse_cmd(char *cmd)
     else if (!strcmp(cmd, "stop"))
     {
         uci_halt_search();
-        uci_bestmove();
     }
     else if (!strcmp(cmd, "isready"))
     {

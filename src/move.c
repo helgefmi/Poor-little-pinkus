@@ -372,3 +372,40 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
         }
     } while (swapped);
 }
+
+#if 0
+int move_see(state_t *state, int move)
+{
+    int to = MoveTo(move);
+    int attacker = MovePiece(move);
+    int scores[128], depth = 0;
+    int side_to_move = state->turn;
+    uint64_t attackers = ((cached->moves_rook[to] | cached->moves_bishop[to])
+                       & ~cached->directions[NW][LSB(cached->directions[NW][to] & state->occupied_both)]
+                       & ~cached->directions[NE][LSB(cached->directions[NE][to] & state->occupied_both)]
+                       & ~cached->directions[SE][MSB(cached->directions[SE][to] & state->occupied_both)]
+                       & ~cached->directions[SW][MSB(cached->directions[SW][to] & state->occupied_both)]
+                       & ~cached->directions[NORTH][LSB(cached->directions[NORTH][to] & state->occupied_both)]
+                       & ~cached->directions[EAST][LSB(cached->directions[EAST][to] & state->occupied_both)]
+                       & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][to] & state->occupied_both)]
+                       & ~cached->directions[WEST][MSB(cached->directions[WEST][to] & state->occupied_both)]) |
+                       (cached->moves_knight[to] & state->occupied_both) |
+                       (cached->moves_king[to] & state->occupied_both) |
+                       (cached->attacked_by_pawn[WHITE][from] & state->pieces[WHITE][PAWN]) |
+                       (cached->attacked_by_pawn[BLACK][from] & state->pieces[BLACK][PAWN]);
+
+    scores[0] = eval_piece_values[MoveCapture(move)];
+    do
+    {
+        ++depth;
+        scores[depth] = eval_piece_values[attacker] - scores[depth - 1];
+    } while();
+
+    while (--depth)
+    {
+        scores[depth - 1] = -max(-scores[depth - 1], scores[depth]);
+    }
+
+    return scores[0];
+}
+#endif

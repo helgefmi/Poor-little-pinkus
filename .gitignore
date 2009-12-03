@@ -1,8 +1,9 @@
 *.o
-*~
-*.swp
+.*.swp
 plp
 plp.exe
 polyglot*
 xboard.debug
-tmp
+cygwin*
+plp.bat
+*.stackdump

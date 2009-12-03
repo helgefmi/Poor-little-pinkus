@@ -2,7 +2,7 @@
 #include "plp.h"
 #include "state.h"
 
-int eval_piece_values[6] = {10, 30, 31, 50, 90, 500};
+int eval_piece_values[6] = {100, 300, 310, 500, 900, 5000};
 
 static int eval_material(state_t *state)
 {

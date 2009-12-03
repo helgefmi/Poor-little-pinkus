@@ -129,13 +129,55 @@ void util_move_to_lan(int move, char *out)
 
 int util_legal_killer(state_t *state, int move)
 {
-    /* Check From and Piece */
-    if (!(state->pieces[state->turn][MovePiece(move)] & (1ull << MoveFrom(move))))
+    int from = MoveFrom(move), to = MoveTo(move);
+    int piece = MovePiece(move);
+
+    /* Killers can't be captures. This also checks for pawn bumping into a piece. */
+    if (state->square[to] != -1)
         return 0;
 
-    /* Killers can't be captures */
-    if (state->square[MoveTo(move)] != -1)
+    /* Is the piece still there? */
+    if (!(state->pieces[state->turn][piece] & (1ull << from)))
         return 0;
 
-    return 1;
+    switch (piece)
+    {
+        case PAWN:
+            /* Since we already knows the pawn moved to an empty square,
+               we don't need to check for the destination square. */
+            return !(cached->moves_pawn_one[state->turn][from] & state->occupied_both);
+
+        case KNIGHT:
+            return  1;
+
+        case BISHOP:
+            return !((1ull << to) &
+                     (cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                    | cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                    | cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                    | cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]));
+
+        case ROOK:
+            return !((1ull << to) &
+                     (cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                    | cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                    | cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                    | cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]));
+
+        case QUEEN:
+            return !((1ull << to) &
+                     (cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                    | cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                    | cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                    | cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                    | cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                    | cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                    | cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                    | cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]));
+
+        case KING:
+            return 1;
+    }
+
+    return 0;
 }

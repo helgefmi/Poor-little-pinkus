@@ -35,8 +35,10 @@ void search_iterative(state_t *state, int max_depth)
 
         /* Since we're using Iterative Deepening, a mate result will always be the fastest mate. */
         if (Abs(search.best_score) >= INF - MAX_DEPTH)
-            return;
+            break;
     }
+
+    timectrl_notify_uci();
 }
 
 int search_ab(state_t *state, int depth, int ply, int alpha, int beta)

@@ -6,4 +6,4 @@ all: $(SRC)
 	$(CC) -o $(TARGET) $(SRC) $(CFLAGS)
 
 clean:
-	rm -f src/*.o $(TARGET)
+	rm -f src/*.o $(TARGET) plp.exe

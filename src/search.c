@@ -31,6 +31,9 @@ void search_iterative(state_t *state, int max_depth)
         search.max_depth = depth;
         search_ab(state, depth, 0, -INF, INF, 0);
 
+        if (timectrl_should_halt())
+            break;
+
         /* Since we're using Iterative Deepening, a mate result will always be the fastest mate. */
         if (Abs(search.best_score) >= INF - MAX_DEPTH)
             break;
@@ -62,8 +65,11 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Hash probe */
     if ((hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
-        search.pv[ply][ply] = hash_get_move(state->zobrist);
-        memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
+        if (hash_type == HASH_EXACT)
+        {
+            search.pv[ply][ply] = hash_get_move(state->zobrist);
+            memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
+        }
 
         return score;
     }
@@ -111,6 +117,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             int eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, 1);
             unmake_move(state, *move, ply);
+
+            if (timectrl_should_halt())
+                break;
+
 
             if (eval > alpha)
             {

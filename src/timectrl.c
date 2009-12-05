@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "timectrl.h"
 #include "search.h"
+#include "plp.h"
 #include "uci.h"
 #include "util.h"
 
@@ -13,21 +14,18 @@ timecontrol_t timecontrol;
 
 void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, uint64_t nodes, int infinite, int verbose)
 {
+    int mytime = (state->turn == WHITE ? wtime : btime) / 1000;
+
     memset(&timecontrol, 0, sizeof(timecontrol_t));
 
-    if (!depth)
-    {
-        depth = 9;
-    }
-
-    if (infinite)
+    if (!depth || infinite)
         depth = 200;
 
     timecontrol.verbose = verbose;
     timecontrol.nodes = nodes;
     timecontrol.depth = depth;
 
-    timecontrol.search_time_left = 0;
+    timecontrol.search_time_left = (mytime ? mytime / 25 : 999999999);
     timecontrol.ponder = ponder;
     timecontrol.wtime = wtime;
     timecontrol.btime = btime;
@@ -73,6 +71,10 @@ int timectrl_should_halt()
     struct timeval tv;
     int ret;
 
+    /* We need to have a move before we can halt */
+    if (!search.pv[0][0])
+        return 0;
+
     if (timecontrol.input_timer-- == 0)
     {
         timecontrol.input_timer = INPUT_INTERVAL;
@@ -102,12 +104,10 @@ int timectrl_should_halt()
         return 1;
     }
 
-#if 0
-    if (!timecontrol.search_time_left)
+    if (timecontrol.search_time_left <= 0)
     {
         return 1;
     }
-#endif
 
     return 0;
 }

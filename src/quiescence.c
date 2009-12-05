@@ -43,7 +43,10 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
     }
 
     move_generate_tactical(state, moves, &count);
-    move_sort_captures(moves, count, 0);
+    if (count > 1)
+    {
+        move_sort_captures(moves, count, 0);
+    }
 
     for (move = moves, end = moves + count; move < end; ++move)
     {
@@ -57,6 +60,9 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
 
         eval = -quiescence(state, ply + 1, -beta, -alpha);
         unmake_move(state, *move, ply);
+
+        if (timectrl_should_halt())
+            break;
 
         if (eval > alpha)
         {

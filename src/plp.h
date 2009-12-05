@@ -5,7 +5,6 @@
 
 #define WHITE 0
 #define BLACK 1
-#define BOTH 2
 
 #define PAWN 0
 #define KNIGHT 1

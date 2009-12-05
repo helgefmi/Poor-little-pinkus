@@ -29,6 +29,6 @@ void timectrl_go(state_t*, int, int, int, int, uint64_t, int, int);
 void timectrl_alarm(int);
 
 int timectrl_should_halt();
-void timectrl_notify_uci(state_t*);
+void timectrl_notify_uci();
 
 #endif

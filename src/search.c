@@ -165,7 +165,9 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 {
                     search.best_score = eval;
                     search.best_move = *move;
-                    timectrl_notify_uci(state);
+
+                    if (timecontrol.verbose)
+                        timectrl_notify_uci();
                 }
 
 #ifdef USE_KILLERS

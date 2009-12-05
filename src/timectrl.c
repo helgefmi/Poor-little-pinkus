@@ -109,7 +109,7 @@ int timectrl_should_halt()
     return 0;
 }
 
-void timectrl_notify_uci(state_t *state)
+void timectrl_notify_uci()
 {
     struct timeval now;
     gettimeofday(&now, NULL);

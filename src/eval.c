@@ -3,7 +3,7 @@
 #include "state.h"
 #include "hash.h"
 
-int eval_piece_values[6] = {100, 300, 310, 500, 900, 5000};
+int eval_piece_values[6] = {100, 300, 310, 500, 900, 0};
 
 static int pawn_pcsq[2][64] = {
      {0,   0,   0,   0,   0,   0,   0,   0,
@@ -124,7 +124,7 @@ static int king_pcsq[2][64] = {
       0,  20,  30, -30,   0, -20,  30,  20}
 };
  
-static int king_endgame_pcsq[2][64] = {
+static int king_pcsq_eg[2][64] = {
      {0,  10,  20,  30,  30,  20,  10,   0,
      10,  20,  30,  40,  40,  30,  20,  10,
      20,  30,  40,  50,  50,  40,  30,  20,
@@ -143,20 +143,6 @@ static int king_endgame_pcsq[2][64] = {
      10,  20,  30,  40,  40,  30,  20,  10,
       0,  10,  20,  30,  30,  20,  10,   0}
 };
-
-static int eval_material(state_t *state)
-{
-    register int ret = 0;
-    register int *piecev = eval_piece_values, *end = eval_piece_values + KING + 1;
-    register uint64_t *wpiece = state->pieces[WHITE], *bpiece = state->pieces[BLACK];
-
-    for (; piecev < end; ++piecev, ++wpiece, ++bpiece)
-    {
-        ret += *piecev * (PopCnt(*wpiece) - PopCnt(*bpiece));
-    }
-
-    return ret;
-}
 
 static int eval_pawns(state_t *state, int color)
 {
@@ -242,6 +228,34 @@ static int eval_kings(state_t *state, int color)
     return ret;
 }
 
+static int eval_kings_eg(state_t *state, int color)
+{
+    register uint64_t kings = state->pieces[color][KING];
+    register int ret = 0;
+
+    for (; kings; ClearLow(kings))
+    {
+        int from = LSB(kings);
+        ret += king_pcsq_eg[color][from];
+    }
+
+    return ret;
+}
+
+static int eval_material(state_t *state, int color)
+{
+    register int ret = 0;
+    register int *piecev = eval_piece_values, *end = eval_piece_values + KING + 1;
+    register uint64_t *piece = state->pieces[color];
+
+    for (; piecev < end; ++piecev, ++piece)
+    {
+        ret += *piecev * PopCnt(*piece);
+    }
+
+    return ret;
+}
+
 int eval_state(state_t *state)
 {
     int ret;
@@ -250,13 +264,26 @@ int eval_state(state_t *state)
     if (!hash_get_eval(state->zobrist, &ret))
     {
 #endif
-        ret = eval_material(state);
+        int wmaterial = eval_material(state, WHITE);
+        int bmaterial = eval_material(state, BLACK);
+
+        int is_endgame = wmaterial < 1300 && bmaterial < 1300;
+
+        ret = wmaterial - bmaterial;
         ret += eval_pawns(state, WHITE) - eval_pawns(state, BLACK);
         ret += eval_knights(state, WHITE) - eval_knights(state, BLACK);
         ret += eval_bishops(state, WHITE) - eval_bishops(state, BLACK);
         ret += eval_rooks(state, WHITE) - eval_rooks(state, BLACK);
         ret += eval_queens(state, WHITE) - eval_queens(state, BLACK);
-        ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
+
+        if (is_endgame)
+        {
+            ret += eval_kings_eg(state, WHITE) - eval_kings_eg(state, BLACK);
+        }
+        else
+        {
+            ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
+        }
 
 #ifdef USE_HASH_EVAL
         hash_add_eval(state->zobrist, ret);

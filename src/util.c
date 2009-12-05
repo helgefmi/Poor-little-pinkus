@@ -5,6 +5,7 @@
 #include "util.h"
 #include "cache.h"
 #include "plp.h"
+#include "search.h"
 
 int util_char_to_piece(char piece_c)
 {
@@ -180,4 +181,19 @@ int util_legal_killer(state_t *state, int move)
     }
 
     return 0;
+}
+
+void util_print_pv()
+{
+    int i;
+
+    printf(" score cp %d pv ", search.best_score);
+    for (i = 0; i < search.pv.count; ++i)
+    {
+        char buf[16];
+        util_move_to_lan(search.pv.moves[i], buf);
+        printf("%s ", buf);
+    }
+
+    fflush(stdout);
 }

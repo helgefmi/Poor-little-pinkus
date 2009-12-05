@@ -5,13 +5,18 @@
 #include "move.h"
 #include "plp.h"
 
-#define AB_INVALID_NODE -0xdead
 #define MAX_DEPTH 256
 
 typedef struct
 {
-    int pv[MAX_DEPTH][MAX_DEPTH];
+    int moves[MAX_DEPTH];
+    int count;
+} pv_t;
+
+typedef struct
+{
     int best_score;
+    int best_move;
     int max_depth;
 
     int move_phase[MAX_DEPTH];
@@ -20,6 +25,8 @@ typedef struct
     uint64_t qs_visited_nodes;
     int cache_hits, cache_misses;
     int eval_cache_hits, eval_cache_misses;
+
+    pv_t pv;
 
     int in_endgame;
     int null_depth; /* for each null move, increment, when we come back, decrement */
@@ -34,6 +41,6 @@ extern search_data_t search;
 void search_go(state_t*, int);
 
 void search_iterative(state_t*, int);
-int search_ab(state_t*, int, int, int, int, int);
+int search_ab(state_t*, int, int, int, int, int, pv_t*);
 
 #endif

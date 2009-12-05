@@ -19,4 +19,6 @@ int util_legal_killer(state_t*, int);
 
 char *util_trim_str(char*);
 
+void util_print_pv();
+
 #endif

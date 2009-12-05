@@ -21,6 +21,7 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, ui
     if (!depth || infinite)
         depth = 200;
 
+    timecontrol.state = state;
     timecontrol.verbose = verbose;
     timecontrol.nodes = nodes;
     timecontrol.depth = depth;
@@ -59,7 +60,7 @@ void timectrl_alarm(int n)
 
     if (timecontrol.verbose)
     {
-        timectrl_notify_uci();
+        timectrl_notify_uci(timecontrol.state);
     }
 
     alarm(1);
@@ -70,10 +71,6 @@ int timectrl_should_halt()
     fd_set rdfs;
     struct timeval tv;
     int ret;
-
-    /* We need to have a move before we can halt */
-    if (!search.pv[0][0])
-        return 0;
 
     if (timecontrol.input_timer-- == 0)
     {
@@ -112,7 +109,7 @@ int timectrl_should_halt()
     return 0;
 }
 
-void timectrl_notify_uci()
+void timectrl_notify_uci(state_t *state)
 {
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -123,28 +120,15 @@ void timectrl_notify_uci()
     spent_time += (now.tv_usec - timecontrol.start_time.tv_usec);
     spent_time /= 1000000.0;
 
-    printf("info nodes %llu nps %d",
-        search.visited_nodes, (int)(search.visited_nodes / spent_time));
+    printf("info nodes %llu nps %d depth %d cachehits %d cachemisses %d time %d",
+        search.visited_nodes,
+        (int)(search.visited_nodes / spent_time),
+        search.max_depth,
+        search.cache_hits,
+        search.cache_misses,
+        (int)spent_time * 1000);
 
-    if (search.pv[0][0])
-    {
-        printf(" depth %d score cp %d time %d pv", search.max_depth, search.best_score, (int)spent_time * 1000);
-
-        int i;
-        for (i = 0; i < 128; ++i)
-        {
-            if (!search.pv[0][i])
-            {
-                break;
-            }
-
-            char buf[16];
-            util_move_to_lan(search.pv[0][i], buf);
-            printf(" %s", buf);
-        }
-    }
-
-    printf(" cachehits %d cachemisses %d", search.cache_hits, search.cache_misses);
+    util_print_pv();
 
     printf("\n");
     fflush(stdout);

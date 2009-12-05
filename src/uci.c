@@ -115,7 +115,7 @@ void uci_halt_search()
 
 void uci_bestmove()
 {
-    if (!search.pv[0])
+    if (!search.best_move)
     {
         uci_debug("Didn't have a best move in bestmove() :-(");
         printf("bestmove 0000\n");
@@ -124,7 +124,7 @@ void uci_bestmove()
     else
     {
         char buf[16];
-        util_move_to_lan(search.pv[0][0], buf);
+        util_move_to_lan(search.best_move, buf);
         uci_debug("giving out best move:");
         uci_debug(buf);
         printf("bestmove %s\n", buf);

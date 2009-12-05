@@ -1,6 +1,7 @@
 #include "eval.h"
 #include "plp.h"
 #include "state.h"
+#include "hash.h"
 
 int eval_piece_values[6] = {100, 300, 310, 500, 900, 5000};
 
@@ -246,13 +247,22 @@ int eval_state(state_t *state)
 {
     int ret;
 
-    ret = eval_material(state);
-    ret += eval_pawns(state, WHITE) - eval_pawns(state, BLACK);
-    ret += eval_knights(state, WHITE) - eval_knights(state, BLACK);
-    ret += eval_bishops(state, WHITE) - eval_bishops(state, BLACK);
-    ret += eval_rooks(state, WHITE) - eval_rooks(state, BLACK);
-    ret += eval_queens(state, WHITE) - eval_queens(state, BLACK);
-    ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
+#ifdef USE_HASH_EVAL
+    if (!hash_get_eval(state->zobrist, &ret))
+    {
+#endif
+        ret = eval_material(state);
+        ret += eval_pawns(state, WHITE) - eval_pawns(state, BLACK);
+        ret += eval_knights(state, WHITE) - eval_knights(state, BLACK);
+        ret += eval_bishops(state, WHITE) - eval_bishops(state, BLACK);
+        ret += eval_rooks(state, WHITE) - eval_rooks(state, BLACK);
+        ret += eval_queens(state, WHITE) - eval_queens(state, BLACK);
+        ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
+
+        hash_add_eval(state->zobrist, ret);
+#ifdef USE_HASH_EVAL
+    }
+#endif
 
     return state->turn == WHITE ? ret : -ret;
 }

@@ -18,6 +18,7 @@ typedef struct
     uint64_t visited_nodes;
     uint64_t qs_visited_nodes;
     int cache_hits, cache_misses;
+    int eval_cache_hits, eval_cache_misses;
 
     int in_endgame;
 

@@ -1,6 +1,8 @@
 #ifndef _PLP_H
 #define _PLP_H
 
+#define USE_HASH_EVAL
+
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 #define WHITE 0

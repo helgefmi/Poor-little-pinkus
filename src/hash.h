@@ -5,6 +5,9 @@
 #define HASH_ALPHA 2
 #define HASH_BETA 4
 
+#define HASH_EVAL_SIZE (1024 * 1024 * 12)
+#define HASH_EVAL_MASK (HASH_EVAL_SIZE - 1)
+
 #include <stdint.h>
 #include "state.h"
 
@@ -28,18 +31,28 @@ typedef struct
     int move;
 } hash_node_t;
 
+typedef struct
+{
+    uint64_t hash;
+    int eval;
+} hash_eval_t;
+
 hash_zobrist_t *hash_zobrist;
 
 void hash_init();
 void hash_destroy();
 void hash_set_tsize(int);
 void hash_wipe();
-int hash_get_move(uint64_t);
 
 uint64_t hash_make_zobrist(state_t*);
 
+int hash_get_move(uint64_t);
 int hash_probe(uint64_t, int, int, int, int*);
+
 void hash_add_node(uint64_t, uint64_t, int, int, int);
 hash_node_t *hash_get_node(uint64_t);
+
+void hash_add_eval(uint64_t, int);
+int hash_get_eval(uint64_t, int*);
 
 #endif

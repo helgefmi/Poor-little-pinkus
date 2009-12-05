@@ -9,6 +9,8 @@
 static hash_node_t *hash_table;
 static int _hash_mask;
 
+static hash_eval_t *hash_eval;
+
 static inline uint64_t _rand64()
 {
     return rand() ^ ((uint64_t)rand() << 15)
@@ -65,6 +67,11 @@ void hash_init()
 
     hash_zobrist = malloc(sizeof(hash_zobrist_t));
     _init_zobrist();
+
+#ifdef USE_HASH_EVAL
+    hash_eval = malloc(sizeof(hash_eval_t) * HASH_EVAL_SIZE);
+    memset(hash_eval, 0, sizeof(hash_eval_t) * HASH_EVAL_SIZE);
+#endif
 }
 
 void hash_destroy()
@@ -226,4 +233,32 @@ void hash_wipe()
     {
         memset(hash_table, 0, sizeof(hash_node_t) * (_hash_mask + 1));
     }
+
+#ifdef USE_HASH_EVAL
+    memset(hash_eval, 0, sizeof(hash_eval_t) * HASH_EVAL_SIZE);
+#endif
+}
+
+void hash_add_eval(uint64_t zobrist_key, int eval)
+{
+    int idx = zobrist_key & HASH_EVAL_MASK;
+
+    hash_eval[idx].eval = eval;
+    hash_eval[idx].hash = zobrist_key;
+}
+
+int hash_get_eval(uint64_t zobrist_key, int *ret)
+{
+    int idx = zobrist_key & HASH_EVAL_MASK;
+
+    if (hash_eval[idx].hash == zobrist_key)
+    {
+        *ret = hash_eval[idx].eval;
+        ++search.eval_cache_hits;
+        return 1;
+    }
+
+    ++search.eval_cache_misses;
+
+    return 0;
 }

@@ -17,16 +17,18 @@ static char* benchmarks[NUM_BENCHES] = {
 };
 
 int depths[NUM_BENCHES] = {
-    13, 11, 16,
-    11, 10, 10
+    11, 9, 17,
+    10, 9, 9
 };
 
 void bench_start(int depth)
 {
-    uint64_t total_nodes = 0;
+    uint64_t ab_nodes = 0, qs_nodes = 0;
     struct timeval start_time, now;
     float cache_hits = 0,
-          cache_misses = 0;
+          cache_misses = 0,
+          eval_cache_hits = 0,
+          eval_cache_misses = 0;
 
     gettimeofday(&start_time, 0);
 
@@ -39,9 +41,12 @@ void bench_start(int depth)
         hash_wipe();
         timectrl_go(&state, 0, 0, 0, depth ? depth : depths[i], 0, 0, 0);
 
-        total_nodes += search.visited_nodes;
+        ab_nodes += search.visited_nodes;
+        qs_nodes += search.qs_visited_nodes;
         cache_hits += search.cache_hits;
         cache_misses += search.cache_misses;
+        eval_cache_hits += search.eval_cache_hits;
+        eval_cache_misses += search.eval_cache_misses;
 
         gettimeofday(&now, 0);
 
@@ -50,8 +55,15 @@ void bench_start(int depth)
         spent_time *= 1000000;
         spent_time += (now.tv_usec - start_time.tv_usec);
 
-        printf("Time: %.2f, Nodes: %.2fM, nps: %.2fM\n", spent_time / 1000000.0, total_nodes / 1000000.0, total_nodes/spent_time);
-        printf("Cache hitrate: %.2f\n\n", 100 * (cache_hits / (cache_hits + cache_misses)));
+        printf("Time: %.2f, Nodes: ab=%.2fM, qs=%.2fM, nps: %.2fM\n",
+            spent_time / 1000000.0,
+            ab_nodes / 1000000.0,
+            qs_nodes / 1000000.0,
+            (ab_nodes + qs_nodes) / spent_time);
+
+        printf("Cache hitrate: tt=%.2f eval=%.2f\n\n",
+            100 * (cache_hits / (cache_hits + cache_misses)),
+            100 * (eval_cache_hits / (eval_cache_hits + eval_cache_misses)));
 
         fflush(stdout);
     }

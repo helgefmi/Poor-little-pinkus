@@ -31,6 +31,9 @@ void search_iterative(state_t *state, int max_depth)
         search.max_depth = depth;
         search_ab(state, depth, 0, -INF, INF, 0);
 
+        if (timecontrol.verbose)
+            timectrl_notify_uci();
+
         if (timectrl_should_halt())
             break;
 
@@ -38,8 +41,6 @@ void search_iterative(state_t *state, int max_depth)
         if (Abs(search.best_score) >= INF - MAX_DEPTH)
             break;
     }
-
-    timectrl_notify_uci();
 }
 
 int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_null)

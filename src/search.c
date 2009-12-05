@@ -64,18 +64,12 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         return 0;
 
     /* Hash probe */
-    if ((hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
+    if (ply > 0 && (hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
         if (hash_type == HASH_EXACT)
         {
             search.pv[ply][ply] = hash_get_move(state->zobrist);
             memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
-        }
-        /* If our previous PV is currently failing, and the computer is struggeling with finding a better PV,
-         * we need to copy the old best move in case we can't find a solution */
-        else if (!search.pv[ply][ply])
-        {
-            search.pv[ply][ply] = hash_get_move(state->zobrist);
         }
 
         return score;

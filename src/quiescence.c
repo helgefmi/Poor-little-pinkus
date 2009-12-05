@@ -21,9 +21,7 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
 
     /* Handle repetition */
     if (state_is_repeating(state))
-    {
         return 0;
-    }
 
     /* Stand pat value */
     eval = eval_state(state);
@@ -31,14 +29,10 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
     /* If it's hopeless for alpha, we can exit early */
     test = eval + eval_piece_values[QUEEN];
     if (state->pieces[state->turn][PAWN] & cached->promote_from[state->turn])
-    {
         test += eval_piece_values[QUEEN];
-    }
 
     if (test < alpha)
-    {
         return alpha;
-    }
 
     if (eval > alpha)
     {

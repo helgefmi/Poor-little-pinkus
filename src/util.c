@@ -176,7 +176,7 @@ int util_legal_killer(state_t *state, int move)
                     | cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]));
 
         case KING:
-            return 1;
+            return Abs(from - to) != 2;
     }
 
     return 0;

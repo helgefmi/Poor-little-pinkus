@@ -80,8 +80,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     static int R = 2;
     if (can_null && depth > R && !search.in_endgame && !in_check)
     {
-        /* To prevent double null moves */
-
         make_null_move(state, ply);
         int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0);
         unmake_null_move(state, ply);

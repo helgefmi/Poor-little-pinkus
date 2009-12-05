@@ -80,6 +80,9 @@ void hash_destroy()
     {
         free(hash_table);
     }
+#ifdef USE_HASH_EVAL
+    free(hash_eval);
+#endif
 
     free(hash_zobrist);
 }
@@ -147,6 +150,9 @@ void hash_add_node(uint64_t zobrist_key, uint64_t score, int depth, int type, in
     }
 
     idx = zobrist_key & _hash_mask;
+
+    if (hash_table[idx].hash == zobrist_key && hash_table[idx].depth > depth)
+        return;
 
     hash_table[idx].hash = zobrist_key;
     hash_table[idx].depth = depth;

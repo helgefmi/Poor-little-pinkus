@@ -13,6 +13,7 @@
 #include "move.h"
 #include "make.h"
 
+int plp_mode;
 void print_usage()
 {
     printf("\n"
@@ -33,19 +34,12 @@ void print_usage()
 " Anything else prints out this message.\n");
 }
 
-#define MODE_PRINT_USAGE 0
-#define MODE_UCI 1
-#define MODE_PERFT 2
-#define MODE_DIVIDE 3
-#define MODE_PERFTSUITE 4
-#define MODE_BENCH 5
-
 int main(int argc, char **argv)
 {
     char *fen = FEN_INIT;
     int depth = 0;
     int table_size = 512;
-    int mode = MODE_PRINT_USAGE;
+    plp_mode = MODE_PRINT_USAGE;
 
     int i;
     for (i = 1; i < argc; ++i)
@@ -67,35 +61,35 @@ int main(int argc, char **argv)
             ++i;
             if (0 == strcmp(argv[i], "divide"))
             {
-                mode = MODE_DIVIDE;
+                plp_mode = MODE_DIVIDE;
             }
             else if (0 == strcmp(argv[i], "perft"))
             {
-                mode = MODE_PERFT;
+                plp_mode = MODE_PERFT;
             }
             else if (0 == strcmp(argv[i], "perftsuite"))
             {
-                mode = MODE_PERFTSUITE;
+                plp_mode = MODE_PERFTSUITE;
             }
             else if (0 == strcmp(argv[i], "uci"))
             {
-                mode = MODE_UCI;
+                plp_mode = MODE_UCI;
             }
             else if (0 == strcmp(argv[i], "bench"))
             {
-                mode = MODE_BENCH;
+                plp_mode = MODE_BENCH;
             }
             else
             {
                 fprintf(stderr, "Invalid mode: %s\n", argv[i]);
-                mode = MODE_PRINT_USAGE;
+                plp_mode = MODE_PRINT_USAGE;
                 break;
             }
         }
         else
         {
             fprintf(stderr, "Invalid option: %s\n", argv[i]);
-            mode = MODE_PRINT_USAGE;
+            plp_mode = MODE_PRINT_USAGE;
             break;
         }
     }
@@ -116,7 +110,7 @@ int main(int argc, char **argv)
 
     /* State will only be set up with -fen if we want perft/divide */
     state_t *state = 0;
-    switch (mode)
+    switch (plp_mode)
     {
         case MODE_PERFT:
         case MODE_DIVIDE:
@@ -129,7 +123,7 @@ int main(int argc, char **argv)
             break;
     }
 
-    switch (mode)
+    switch (plp_mode)
     {
         case MODE_UCI:
             uci_start();

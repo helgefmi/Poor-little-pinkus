@@ -12,6 +12,8 @@
 
 timecontrol_t timecontrol;
 
+extern int plp_mode;
+
 void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, uint64_t nodes, int infinite, int verbose)
 {
     int mytime = (state->turn == WHITE ? wtime : btime) / 1000;
@@ -72,7 +74,7 @@ int timectrl_should_halt()
     struct timeval tv;
     int ret;
 
-    if (timecontrol.input_timer-- == 0)
+    if (plp_mode == MODE_UCI && timecontrol.input_timer-- == 0)
     {
         timecontrol.input_timer = INPUT_INTERVAL;
         FD_ZERO(&rdfs);

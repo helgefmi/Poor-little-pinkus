@@ -5,7 +5,7 @@
 #define HASH_ALPHA 2
 #define HASH_BETA 4
 
-#define HASH_EVAL_SIZE (1024 * 1024 * 12)
+#define HASH_EVAL_SIZE (1024 * 1024)
 #define HASH_EVAL_MASK (HASH_EVAL_SIZE - 1)
 
 #include <stdint.h>

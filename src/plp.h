@@ -1,6 +1,15 @@
 #ifndef _PLP_H
 #define _PLP_H
 
+#define MODE_PRINT_USAGE 0
+#define MODE_UCI 1
+#define MODE_PERFT 2
+#define MODE_DIVIDE 3
+#define MODE_PERFTSUITE 4
+#define MODE_BENCH 5
+
+extern int plp_mode;
+
 #define USE_HASH_EVAL
 #define USE_KILLERS
 #define USE_NULL

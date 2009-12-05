@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include "state.h"
 
-#define INPUT_INTERVAL 100000
+#define INPUT_INTERVAL 1000000
 
 typedef struct
 {

@@ -29,9 +29,7 @@ void search_iterative(state_t *state, int max_depth)
     for (depth = 1; depth <= max_depth; ++depth)
     {
         search.max_depth = depth;
-        search.can_nullmove[0] = 0;
-        search.can_nullmove[1] = 1;
-        search_ab(state, depth, 0, -INF, INF);
+        search_ab(state, depth, 0, -INF, INF, 0);
 
         /* Since we're using Iterative Deepening, a mate result will always be the fastest mate. */
         if (Abs(search.best_score) >= INF - MAX_DEPTH)
@@ -41,13 +39,13 @@ void search_iterative(state_t *state, int max_depth)
     timectrl_notify_uci();
 }
 
-int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
+int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_null)
 {
     int *move, *end;
     int count = 0;
     int legal_move = 0;
     int best_move = 0;
-    int hash_type = HASH_ALPHA;
+    int hash_type;
     int moves[100];
     int score = 0;
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
@@ -62,10 +60,12 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
         return 0;
 
     /* Hash probe */
-    if (hash_probe(state->zobrist, depth, alpha, beta, &score))
+    if ((hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
-        if (ply > 0)
-            return score;
+        search.pv[ply][ply] = hash_get_move(state->zobrist);
+        memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
+
+        return score;
     }
 
     /* Check extension */
@@ -78,25 +78,20 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
 
     /* Null move */
     static int R = 2;
-    if (search.can_nullmove[ply] && depth > R && !search.in_endgame && !in_check)
+    if (can_null && depth > R && !search.in_endgame && !in_check)
     {
         /* To prevent double null moves */
-        search.can_nullmove[ply + 1] = 0;
 
         make_null_move(state, ply);
-        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1);
+        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0);
         unmake_null_move(state, ply);
 
         if (eval >= beta)
             return beta;
     }
-    else
-    {
-        /* Allow null moves every 2 plies */
-        search.can_nullmove[ply + 1] = 1;
-    }
 
     /* Move generation */
+    hash_type = HASH_ALPHA;
     search.move_phase[ply] = PHASE_HASH;
     while (next_moves(state, moves, &count, ply, depth))
     {
@@ -116,7 +111,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta)
 
             legal_move = 1;
 
-            int eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha);
+            int eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, 1);
             unmake_move(state, *move, ply);
 
             if (eval > alpha)

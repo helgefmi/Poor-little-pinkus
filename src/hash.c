@@ -108,14 +108,14 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
     if (entry->type == HASH_EXACT)
     {
         *score = entry->score;
-        return 1;
+        return HASH_EXACT;
     }
     else if (entry->type == HASH_ALPHA)
     {
         if (entry->score <= alpha)
         {
             *score = alpha;
-            return 1;
+            return HASH_ALPHA;
         }
     }
     else if (entry->type == HASH_BETA)
@@ -123,7 +123,7 @@ int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
         if (entry->score >= beta)
         {
             *score = beta;
-            return 1;
+            return HASH_BETA;
         }
     }
 

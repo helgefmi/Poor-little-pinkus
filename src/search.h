@@ -20,7 +20,6 @@ typedef struct
     int cache_hits, cache_misses;
 
     int in_endgame;
-    int can_nullmove[MAX_DEPTH];
 
     int killers[MAX_DEPTH][2];
 } search_data_t;
@@ -30,6 +29,6 @@ extern search_data_t search;
 void search_go(state_t*, int);
 
 void search_iterative(state_t*, int);
-int search_ab(state_t*, int, int, int, int);
+int search_ab(state_t*, int, int, int, int, int);
 
 #endif

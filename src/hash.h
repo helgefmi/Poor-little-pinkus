@@ -1,9 +1,9 @@
 #ifndef _HASHING_H
 #define _HASHING_H
 
-#define HASH_EXACT 0
-#define HASH_ALPHA 1
-#define HASH_BETA 2
+#define HASH_EXACT 1
+#define HASH_ALPHA 2
+#define HASH_BETA 4
 
 #include <stdint.h>
 #include "state.h"

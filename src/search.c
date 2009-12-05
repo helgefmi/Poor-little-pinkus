@@ -71,6 +71,12 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             search.pv[ply][ply] = hash_get_move(state->zobrist);
             memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
         }
+        /* If our previous PV is currently failing, and the computer is struggeling with finding a better PV,
+         * we need to copy the old best move in case we can't find a solution */
+        else if (!search.pv[ply][ply])
+        {
+            search.pv[ply][ply] = hash_get_move(state->zobrist);
+        }
 
         return score;
     }
@@ -84,9 +90,12 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         return quiescence(state, ply + 1, alpha, beta);
 
     /* Null move */
-    static int R = 2;
-    if (can_null && depth > R && !search.in_endgame && !in_check)
+    if (can_null && depth > 2 && !search.in_endgame && !in_check)
     {
+        int R = 2;
+        if (depth > 6)
+            R = 3;
+
         make_null_move(state, ply);
         int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0);
         unmake_null_move(state, ply);

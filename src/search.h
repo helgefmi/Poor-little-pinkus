@@ -3,6 +3,7 @@
 
 #include "state.h"
 #include "move.h"
+#include "plp.h"
 
 #define AB_INVALID_NODE -0xdead
 #define MAX_DEPTH 256
@@ -21,8 +22,11 @@ typedef struct
     int eval_cache_hits, eval_cache_misses;
 
     int in_endgame;
+    int null_depth; /* for each null move, increment, when we come back, decrement */
 
+#ifdef USE_KILLERS
     int killers[MAX_DEPTH][2];
+#endif
 } search_data_t;
 
 extern search_data_t search;

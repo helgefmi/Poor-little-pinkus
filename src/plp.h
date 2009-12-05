@@ -2,6 +2,8 @@
 #define _PLP_H
 
 #define USE_HASH_EVAL
+#define USE_KILLERS
+#define USE_NULL
 
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 

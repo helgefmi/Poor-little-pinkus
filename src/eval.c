@@ -258,8 +258,8 @@ int eval_state(state_t *state)
         ret += eval_queens(state, WHITE) - eval_queens(state, BLACK);
         ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
 
-        hash_add_eval(state->zobrist, ret);
 #ifdef USE_HASH_EVAL
+        hash_add_eval(state->zobrist, ret);
     }
 #endif
 

@@ -66,7 +66,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Hash probe */
     if (ply > 0 && (hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
-        if (hash_type == HASH_EXACT)
+        if (!search.null_depth && hash_type == HASH_EXACT)
         {
             search.pv[ply][ply] = hash_get_move(state->zobrist);
             memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
@@ -83,6 +83,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     if (!depth)
         return quiescence(state, ply + 1, alpha, beta);
 
+#ifdef USE_NULL
     /* Null move */
     if (can_null && depth > 2 && !search.in_endgame && !in_check)
     {
@@ -91,12 +92,17 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             R = 3;
 
         make_null_move(state, ply);
+        search.null_depth += 1;
+
         int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0);
+
         unmake_null_move(state, ply);
+        search.null_depth -= 1;
 
         if (eval >= beta)
             return beta;
     }
+#endif
 
     /* Move generation */
     hash_type = HASH_ALPHA;
@@ -134,12 +140,14 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                     /* Add hash */
                     hash_add_node(state->zobrist, beta, depth, HASH_BETA, *move);
 
+#ifdef USE_KILLERS
                     /* Add killer */
                     if (MoveCapture(*move) > 5 && MovePromote(*move) > 5 && *move != search.killers[ply][0])
                     {
                         search.killers[ply][1] = search.killers[ply][0];
                         search.killers[ply][0] = *move;
                     }
+#endif
                     return beta;
                 }
 
@@ -152,16 +160,21 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 if (ply == 0)
                     search.best_score = eval;
 
+#ifdef USE_KILLERS
                 /* Killer */
                 if (MoveCapture(*move) > 5 && MovePromote(*move) > 5 && *move != search.killers[ply][0])
                 {
                     search.killers[ply][1] = search.killers[ply][0];
                     search.killers[ply][0] = best_move;
                 }
+#endif
 
                 /* For PV extraction */
-                search.pv[ply][ply] = *move;
-                memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
+                if (!search.null_depth)
+                {
+                    search.pv[ply][ply] = *move;
+                    memcpy(&search.pv[ply][ply + 1], &search.pv[ply + 1][ply + 1], sizeof(int) * depth);
+                }
             }
         }
     }

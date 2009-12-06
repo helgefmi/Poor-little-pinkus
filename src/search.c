@@ -146,7 +146,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             unmake_move(state, *move, ply);
 
             if (timectrl_should_halt())
-                break;
+                return 0;
 
             if (eval > alpha)
             {

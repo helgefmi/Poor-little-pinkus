@@ -33,8 +33,6 @@ void search_iterative(state_t *state, int max_depth)
         if (timecontrol.verbose)
             timectrl_notify_uci(state);
 
-        assert(search.best_move == search.pv.moves[0]);
-
         if (timectrl_should_halt())
             break;
 
@@ -56,30 +54,37 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
     pv_t cur_pv;
 
-    cur_pv.count = 0;
-
     if (timectrl_should_halt())
         return 0;
 
     ++search.visited_nodes;
 
+#ifdef USE_REPETITION
     /* Repetition */
     if (state_is_repeating(state))
         return 0;
+#endif
 
     /* Hash probe */
+#ifdef USE_TT
     if (ply > 0 && (hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
         return score;
     }
+#endif
 
     /* Check extension */
+#ifdef USE_CHECK_EXTENSION
     if (in_check)
         depth += 1;
+#endif
 
     /* Evaluate */
     if (!depth)
+    {
+        pv->count = 0;
         return quiescence(state, ply + 1, alpha, beta);
+    }
 
 #ifdef USE_NULL
     /* Null move */
@@ -104,7 +109,13 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
     /* Move generation */
     hash_type = HASH_ALPHA;
+
+#if defined(USE_TT) && defined(USE_HASH_MOVE)
     search.move_phase[ply] = PHASE_HASH;
+#else
+    search.move_phase[ply] = PHASE_TACTICAL;
+#endif
+
     while (next_moves(state, moves, &count, ply, depth))
     {
         if (!count)
@@ -134,12 +145,14 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 /* Fail high ? */
                 if (eval >= beta)
                 {
+#ifdef USE_TT
                     /* Add hash */
                     hash_add_node(state->zobrist, beta, depth, HASH_BETA, *move);
+#endif
 
 #ifdef USE_KILLERS
                     /* Add killer */
-                    if (!search.null_depth && MoveCapture(*move) > 5 && MovePromote(*move) > 5 && *move != search.killers[ply][0])
+                    if (!search.null_depth && MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
                     {
                         search.killers[ply][1] = search.killers[ply][0];
                         search.killers[ply][0] = *move;
@@ -154,9 +167,9 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
                 if (!search.null_depth)
                 {
+                    memcpy(pv->moves + 1, cur_pv.moves, cur_pv.count * sizeof(int));
                     pv->moves[0] = *move;
                     pv->count = cur_pv.count + 1;
-                    memcpy(pv->moves + 1, cur_pv.moves, cur_pv.count * sizeof(int));
                 }
 
                 best_move = *move;
@@ -164,7 +177,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 if (ply == 0)
                 {
                     search.best_score = eval;
-                    search.best_move = *move;
 
                     if (timecontrol.verbose)
                         timectrl_notify_uci();
@@ -172,7 +184,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_KILLERS
                 /* Killer */
-                if (!search.null_depth && MoveCapture(*move) > 5 && MovePromote(*move) > 5 && *move != search.killers[ply][0])
+                if (!search.null_depth && MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
                 {
                     search.killers[ply][1] = search.killers[ply][0];
                     search.killers[ply][0] = best_move;
@@ -183,9 +195,11 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     }
 
     if (!legal_move)
-        alpha = in_check ? -INF + ply: -10;
+        alpha = in_check ? -INF + ply : -10;
+#ifdef USE_TT
     else
         hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
+#endif
 
     return alpha;
 }

@@ -187,7 +187,16 @@ void util_print_pv()
 {
     int i;
 
-    printf(" score cp %d pv ", search.best_score);
+    if (Abs(search.best_score) >= INF - MAX_DEPTH)
+    {
+        int mate_in = (INF - Abs(search.best_score)) / 2;
+        printf(" score mate %d pv ", mate_in);
+    }
+    else
+    {
+        printf(" score cp %d pv ", search.best_score);
+    }
+
     for (i = 0; i < search.pv.count; ++i)
     {
         char buf[16];

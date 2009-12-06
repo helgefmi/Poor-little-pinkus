@@ -19,9 +19,11 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
 
     ++search.qs_visited_nodes;
 
+#ifdef USE_REPETITION
     /* Handle repetition */
     if (state_is_repeating(state))
         return 0;
+#endif
 
     /* Stand pat value */
     eval = eval_state(state);

@@ -89,6 +89,7 @@ void hash_destroy()
 
 void hash_set_tsize(int memsize)
 {
+#ifdef USE_TT
     int tsize = (memsize * 1024 * 1024) / sizeof(hash_node_t);
 
     if (hash_table)
@@ -102,6 +103,7 @@ void hash_set_tsize(int memsize)
     _hash_mask = tsize - 1;
     hash_table = malloc(sizeof(hash_node_t) * tsize);
     hash_wipe();
+#endif
 }
 
 int hash_probe(uint64_t zobrist_key, int depth, int alpha, int beta, int *score)
@@ -235,10 +237,12 @@ uint64_t hash_make_zobrist(state_t *state)
 
 void hash_wipe()
 {
+#ifdef USE_TT
     if (hash_table)
     {
         memset(hash_table, 0, sizeof(hash_node_t) * (_hash_mask + 1));
     }
+#endif
 
 #ifdef USE_HASH_EVAL
     memset(hash_eval, 0, sizeof(hash_eval_t) * HASH_EVAL_SIZE);

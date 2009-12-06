@@ -16,7 +16,6 @@ typedef struct
 typedef struct
 {
     int best_score;
-    int best_move;
     int max_depth;
 
     int move_phase[MAX_DEPTH];

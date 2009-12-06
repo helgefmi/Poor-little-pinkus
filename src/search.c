@@ -54,6 +54,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
     pv_t cur_pv;
 
+    cur_pv.count = 0;
+
     if (timectrl_should_halt())
         return 0;
 
@@ -82,8 +84,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Evaluate */
     if (!depth)
     {
-        pv->count = 0;
-        return quiescence(state, ply + 1, alpha, beta);
+        if (!search.null_depth)
+            pv->count = 0;
+
+        return quiescence(state, ply, alpha, beta);
     }
 
 #ifdef USE_NULL
@@ -97,7 +101,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         make_null_move(state, ply);
         search.null_depth += 1;
 
-        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0, 0);
+        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0, NULL);
 
         unmake_null_move(state, ply);
         search.null_depth -= 1;

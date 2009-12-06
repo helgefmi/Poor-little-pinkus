@@ -87,12 +87,16 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         if (!search.null_depth)
             pv->count = 0;
 
+#ifdef USE_QUIESCENCE
         return quiescence(state, ply, alpha, beta);
+#else
+        return eval_state(state);
+#endif
     }
 
 #ifdef USE_NULL
     /* Null move */
-    if (can_null && depth > 2 && !search.in_endgame && !in_check)
+    if (can_null && ply > 0 && depth > 2 && !search.in_endgame && !in_check)
     {
         int R = 2;
         if (depth > 6)

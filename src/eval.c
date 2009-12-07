@@ -216,29 +216,13 @@ static int eval_queens(state_t *state, int color)
 
 static int eval_kings(state_t *state, int color)
 {
-    register uint64_t kings = state->pieces[color][KING];
-    register int ret = 0;
-
-    for (; kings; ClearLow(kings))
-    {
-        int from = LSB(kings);
-        ret += king_pcsq[color][from];
-    }
-
+    int ret = king_pcsq[color][state->king_idx[color]];
     return ret;
 }
 
 static int eval_kings_eg(state_t *state, int color)
 {
-    register uint64_t kings = state->pieces[color][KING];
-    register int ret = 0;
-
-    for (; kings; ClearLow(kings))
-    {
-        int from = LSB(kings);
-        ret += king_pcsq_eg[color][from];
-    }
-
+    int ret = king_pcsq_eg[color][state->king_idx[color]];
     return ret;
 }
 

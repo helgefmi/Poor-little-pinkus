@@ -23,12 +23,32 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, ui
     if (!depth || infinite)
         depth = 200;
 
+    if (mytime)
+    {
+        mytime /= 25;
+        if (mytime < 1)
+            mytime = 2;
+        if (mytime > 5)
+            mytime++;
+        if (mytime > 30)
+            mytime++;
+        if (mytime > 60)
+            mytime++;
+        if (mytime > 120)
+            mytime++;
+    }
+    else
+    {
+        mytime = 9999999;
+    }
+
+    timecontrol.search_time_left = mytime;
+
     timecontrol.state = state;
     timecontrol.verbose = verbose;
     timecontrol.nodes = nodes;
     timecontrol.depth = depth;
 
-    timecontrol.search_time_left = (mytime ? mytime / 25 : 999999999);
     timecontrol.ponder = ponder;
     timecontrol.wtime = wtime;
     timecontrol.btime = btime;

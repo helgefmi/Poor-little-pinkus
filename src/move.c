@@ -40,26 +40,6 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         }
     }
 
-    /* PAWN */
-    for (pieces = my_pieces[PAWN]; pieces; ClearLow(pieces))
-    {
-        from = LSB(pieces);
-        moves = cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & ~cached->promote[state->turn];
-        if (moves)
-        {
-            moves = cached->moves_pawn_two[state->turn][from] & ~state->occupied_both;
-        }
-
-        for (; moves; ClearLow(moves))
-        {
-            to = LSB(moves);
-
-            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
-            (*count)++;
-        }
-    }
-
-
     /* KNIGHT */
     for (pieces = my_pieces[KNIGHT]; pieces; ClearLow(pieces))
     {
@@ -134,6 +114,26 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
             (*count)++;
         }
     }
+
+    /* PAWN */
+    for (pieces = my_pieces[PAWN]; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & ~cached->promote[state->turn];
+        if (moves)
+        {
+            moves = cached->moves_pawn_two[state->turn][from] & ~state->occupied_both;
+        }
+
+        for (; moves; ClearLow(moves))
+        {
+            to = LSB(moves);
+
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
 
     /* KING */
     from = state->king_idx[state->turn];

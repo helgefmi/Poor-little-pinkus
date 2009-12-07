@@ -13,6 +13,8 @@
 #include "make.h"
 #include "timectrl.h"
 
+#define ASPIRATION 50
+
 search_data_t search;
 
 void search_go(state_t *state, int max_depth)
@@ -24,11 +26,20 @@ void search_go(state_t *state, int max_depth)
 
 void search_iterative(state_t *state, int max_depth)
 {
-    int depth;
-    for (depth = 1; depth <= max_depth; ++depth)
+    int eval, last_eval;
+
+    search.max_depth = 2;
+    last_eval = search_ab(state, search.max_depth, 0, -INF, INF, 0, &search.pv);
+
+    for (search.max_depth = 3; search.max_depth <= max_depth; ++search.max_depth)
     {
-        search.max_depth = depth;
-        search_ab(state, depth, 0, -INF, INF, 0, &search.pv);
+        /* Aspiration */
+        eval = search_ab(state, search.max_depth, 0, last_eval - ASPIRATION, last_eval + ASPIRATION, 0, &search.pv);
+
+        if (eval <= last_eval - ASPIRATION || eval >= last_eval + ASPIRATION)
+            eval = search_ab(state, search.max_depth, 0, -INF, INF, 0, &search.pv);
+
+        last_eval = eval;
 
         if (timecontrol.verbose)
             timectrl_notify_uci(state);
@@ -57,14 +68,14 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     cur_pv.count = 0;
 
     if (timectrl_should_halt())
-        return 0;
+        return alpha;
 
     ++search.visited_nodes;
 
 #ifdef USE_REPETITION
     /* Repetition */
     if (state_is_repeating(state))
-        return 0;
+        return alpha;
 #endif
 
     /* Hash probe */
@@ -96,7 +107,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_NULL
     /* Null move */
-    if (can_null && ply > 0 && depth > 2 && !search.in_endgame && !in_check)
+    if (can_null && depth > 2 && !search.in_endgame && !in_check)
     {
         int R = 2;
         if (depth > 6)
@@ -146,7 +157,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             unmake_move(state, *move, ply);
 
             if (timectrl_should_halt())
-                return 0;
+                return alpha;
 
             if (eval > alpha)
             {
@@ -203,10 +214,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     }
 
     if (!legal_move)
-        alpha = in_check ? -INF + ply : -10;
+        alpha = in_check ? -MATE + ply : -10;
+
 #ifdef USE_TT
-    else
-        hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
+    hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
 #endif
 
     return alpha;

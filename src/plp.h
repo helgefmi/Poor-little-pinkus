@@ -41,6 +41,7 @@ extern int plp_mode;
 #define SW 7
 
 #define INF 99999999
+#define MATE 66666666
 
 #define MoveFrom(move)    (move & 63)
 #define MoveTo(move)      ((move >> 6) & 63)

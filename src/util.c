@@ -187,9 +187,9 @@ void util_print_pv()
 {
     int i;
 
-    if (Abs(search.best_score) >= INF - MAX_DEPTH)
+    if (Abs(search.best_score) >= MATE - MAX_DEPTH)
     {
-        int mate_in = (INF - Abs(search.best_score)) / 2;
+        int mate_in = (MATE - Abs(search.best_score)) / 2;
         printf(" score mate %d pv ", mate_in);
     }
     else

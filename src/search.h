@@ -40,6 +40,6 @@ extern search_data_t search;
 void search_go(state_t*, int);
 
 void search_iterative(state_t*, int);
-int search_ab(state_t*, int, int, int, int, int, pv_t*);
+int search_ab(state_t*, int, int, int, int, int, pv_t*, int);
 
 #endif

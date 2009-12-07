@@ -15,6 +15,11 @@
 
 #define ASPIRATION 50
 
+#define NOT_PV 0
+#define IS_PV 1
+#define NO_NULL 0
+#define CAN_NULL 1
+
 search_data_t search;
 
 void search_go(state_t *state, int max_depth)
@@ -29,15 +34,15 @@ void search_iterative(state_t *state, int max_depth)
     int eval, last_eval;
 
     search.max_depth = 2;
-    last_eval = search_ab(state, search.max_depth, 0, -INF, INF, 0, &search.pv);
+    last_eval = search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
 
     for (search.max_depth = 3; search.max_depth <= max_depth; ++search.max_depth)
     {
         /* Aspiration */
-        eval = search_ab(state, search.max_depth, 0, last_eval - ASPIRATION, last_eval + ASPIRATION, 0, &search.pv);
+        eval = search_ab(state, search.max_depth, 0, last_eval - ASPIRATION, last_eval + ASPIRATION, NO_NULL, &search.pv, IS_PV);
 
         if (eval <= last_eval - ASPIRATION || eval >= last_eval + ASPIRATION)
-            eval = search_ab(state, search.max_depth, 0, -INF, INF, 0, &search.pv);
+            eval = search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
 
         last_eval = eval;
 
@@ -53,7 +58,7 @@ void search_iterative(state_t *state, int max_depth)
     }
 }
 
-int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_null, pv_t *pv)
+int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_null, pv_t *pv, int is_pv)
 {
     int *move, *end;
     int count = 0;
@@ -62,6 +67,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int hash_type;
     int moves[100];
     int score = 0;
+    int raised_alpha = 0;
+    int eval;
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
     pv_t cur_pv;
 
@@ -116,7 +123,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         make_null_move(state, ply);
         search.null_depth += 1;
 
-        int eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, 0, NULL);
+        eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, NO_NULL, NULL, NOT_PV);
 
         unmake_null_move(state, ply);
         search.null_depth -= 1;
@@ -153,7 +160,18 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             legal_move = 1;
 
-            int eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, 1, &cur_pv);
+            if (!is_pv || !raised_alpha)
+            {
+                eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
+            }
+            else
+            {
+                eval = -search_ab(state, depth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, &cur_pv, NOT_PV);
+
+                if (eval > alpha)
+                    eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
+            }
+
             unmake_move(state, *move, ply);
 
             if (timectrl_should_halt())
@@ -181,6 +199,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 }
 
                 /* PV node */
+                raised_alpha = 1;
                 alpha = eval;
                 hash_type = HASH_EXACT;
 

@@ -60,10 +60,10 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = cached->moves_bishop[from]
-                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
-                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
-                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
-                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & cached->n_directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & cached->n_directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & cached->n_directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & cached->n_directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
                 & not_occupied;
 
         for (; moves; ClearLow(moves))
@@ -79,10 +79,10 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = cached->moves_rook[from]
-                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
-                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
-                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
-                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & cached->n_directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & cached->n_directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & cached->n_directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & cached->n_directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
                 & not_occupied;
 
         for (; moves; ClearLow(moves))
@@ -98,14 +98,14 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = (cached->moves_rook[from] | cached->moves_bishop[from])
-                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
-                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
-                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
-                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
-                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
-                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
-                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
-                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & cached->n_directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & cached->n_directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & cached->n_directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & cached->n_directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & cached->n_directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & cached->n_directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & cached->n_directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & cached->n_directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
                 & not_occupied;
 
         for (; moves; ClearLow(moves))
@@ -228,10 +228,10 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = cached->moves_bishop[from]
-                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
-                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
-                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
-                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & cached->n_directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & cached->n_directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & cached->n_directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & cached->n_directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
                 & target;
 
         for (; moves; ClearLow(moves))
@@ -247,10 +247,10 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = cached->moves_rook[from]
-                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
-                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
-                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
-                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & cached->n_directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & cached->n_directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & cached->n_directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & cached->n_directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
                 & target;
 
         for (; moves; ClearLow(moves))
@@ -266,14 +266,14 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     {
         from = LSB(pieces);
         moves = (cached->moves_rook[from] | cached->moves_bishop[from])
-                & ~cached->directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
-                & ~cached->directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
-                & ~cached->directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
-                & ~cached->directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
-                & ~cached->directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
-                & ~cached->directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
-                & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
-                & ~cached->directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
+                & cached->n_directions[NW][LSB(cached->directions[NW][from] & state->occupied_both)]
+                & cached->n_directions[NE][LSB(cached->directions[NE][from] & state->occupied_both)]
+                & cached->n_directions[SE][MSB(cached->directions[SE][from] & state->occupied_both)]
+                & cached->n_directions[SW][MSB(cached->directions[SW][from] & state->occupied_both)]
+                & cached->n_directions[NORTH][LSB(cached->directions[NORTH][from] & state->occupied_both)]
+                & cached->n_directions[EAST][LSB(cached->directions[EAST][from] & state->occupied_both)]
+                & cached->n_directions[SOUTH][MSB(cached->directions[SOUTH][from] & state->occupied_both)]
+                & cached->n_directions[WEST][MSB(cached->directions[WEST][from] & state->occupied_both)]
                 & target;
 
         for (; moves; ClearLow(moves))
@@ -300,13 +300,9 @@ int move_is_attacked(state_t *state, int square_idx, int attacker)
 {
     /* Checks if a set of squares are currently attacked by an attackers pieces */
 
-    if (state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx])
-        return 1;
-
-    if (state->pieces[attacker][KNIGHT] & cached->moves_knight[square_idx])
-        return 1;
-
-    if (state->pieces[attacker][KING] & cached->moves_king[square_idx])
+    if ((state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx]) |
+        (state->pieces[attacker][KNIGHT] & cached->moves_knight[square_idx]) |
+        (state->pieces[attacker][KING] & cached->moves_king[square_idx]))
         return 1;
 
     uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];

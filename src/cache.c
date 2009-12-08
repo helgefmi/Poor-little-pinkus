@@ -198,6 +198,11 @@ void cache_init()
                 cached->moves_rook[idx] |= cached->directions[dir][idx];
             }
 
+            for (i = 0; i < 8; ++i)
+            {
+                cached->n_directions[i][idx] = ~cached->directions[i][idx];
+            }
+
             int king_arr[8][2] = {
                 {1, 0}, {1, 1}, {0, 1}, {-1, 1},
                 {-1, 0}, {-1, -1}, {0, -1}, {1, -1}
@@ -214,6 +219,11 @@ void cache_init()
                 }
             }
         }
+    }
+
+    for (i = 0; i < 8; ++i)
+    {
+        cached->n_directions[i][64] = -1;
     }
 }
 

@@ -94,7 +94,8 @@ int main(int argc, char **argv)
         }
     }
 
-    srand(5);
+    srand(time(NULL));
+    printf("Seed: %d\n", time(NULL));
 
     cache_init();
     hash_init();

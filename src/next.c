@@ -46,28 +46,38 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
 #ifdef USE_KILLERS
         case PHASE_KILLER1:
             search.move_phase[ply] = PHASE_KILLER2;
+
+            *count = 0;
             if (Killer1(ply) && util_legal_killer(state, Killer1(ply)))
             {
-                *movebuf = Killer1(ply);
-                *count = 1;
+                *movebuf++ = Killer1(ply);
+                (*count)++;
             }
-            else
+
+            if (ply > 1 && Killer1(ply - 2) && util_legal_killer(state, Killer1(ply - 2)))
             {
-                *count = 0;
+                *movebuf++ = Killer1(ply - 2);
+                (*count)++;
             }
+
             return 1;
 
         case PHASE_KILLER2:
             search.move_phase[ply] = PHASE_MOVES;
+
+            *count = 0;
             if (Killer2(ply) && util_legal_killer(state, Killer2(ply)))
             {
-                *movebuf = Killer2(ply);
-                *count = 1;
+                *movebuf++ = Killer2(ply);
+                (*count)++;
             }
-            else
+
+            if (ply > 1 && Killer2(ply - 2) && util_legal_killer(state, Killer2(ply - 2)))
             {
-                *count = 0;
+                *movebuf++ = Killer2(ply - 2);
+                (*count)++;
             }
+
             return 1;
 #endif
 

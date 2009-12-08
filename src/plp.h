@@ -18,6 +18,8 @@ extern int plp_mode;
 #define USE_CHECK_EXTENSION
 #define USE_QUIESCENCE
 #define USE_TT
+#define USE_ASPIRATION
+#define USE_HISTORY
 
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 

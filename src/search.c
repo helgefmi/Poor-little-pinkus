@@ -38,10 +38,12 @@ void search_iterative(state_t *state, int max_depth)
 
     for (search.max_depth = 3; search.max_depth <= max_depth; ++search.max_depth)
     {
+#ifdef USE_ASPIRATION
         /* Aspiration */
         eval = search_ab(state, search.max_depth, 0, last_eval - ASPIRATION, last_eval + ASPIRATION, NO_NULL, &search.pv, IS_PV);
 
         if (eval <= last_eval - ASPIRATION || eval >= last_eval + ASPIRATION)
+#endif
             eval = search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
 
         last_eval = eval;
@@ -187,6 +189,11 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                     hash_add_node(state->zobrist, beta, depth, HASH_BETA, *move);
 #endif
 
+#ifdef USE_HISTORY
+                    /* Increment history */
+                    search.history[*move & 0xfff] += 1;
+#endif
+
 #ifdef USE_KILLERS
                     /* Add killer */
                     if (!search.null_depth && MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
@@ -237,6 +244,11 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_TT
     hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
+#endif
+
+#ifdef USE_HISTORY
+    /* Increment history */
+    search.history[best_move & 0xfff] += 1;
 #endif
 
     return alpha;

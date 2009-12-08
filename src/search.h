@@ -30,6 +30,10 @@ typedef struct
     int in_endgame;
     int null_depth; /* for each null move, increment, when we come back, decrement */
 
+#ifdef USE_HISTORY
+    int history[64 * 64];
+#endif
+
 #ifdef USE_KILLERS
     int killers[MAX_DEPTH][2];
 #endif

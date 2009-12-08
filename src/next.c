@@ -77,6 +77,14 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
         case PHASE_MOVES:
             search.move_phase[ply] = PHASE_END;
             move_generate_moves(state, movebuf, count);
+
+#ifdef USE_HISTORY
+            if (depth > 1)
+            {
+                hash_move = hash_get_move(state->zobrist);
+                move_sort_moves(movebuf, *count, hash_move);
+            }
+#endif
             return 1;
 
         case PHASE_END:

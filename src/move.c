@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +5,7 @@
 #include "util.h"
 #include "cache.h"
 #include "hash.h"
+#include "search.h"
 #include "plp.h"
 
 void move_generate_moves(state_t *state, int *movebuf, int *count)
@@ -366,7 +366,6 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
         }
         else
         {
-            assert(MovePromote(*move) >= KNIGHT && MovePromote(*move) <= QUEEN);
             *sortv = 1024 * 1024;
         }
     }
@@ -390,39 +389,39 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
     } while (swapped);
 }
 
-#if 0
-int move_see(state_t *state, int move)
+void move_sort_moves(int *movebuf, int count, int hash_move)
 {
-    int to = MoveTo(move);
-    int attacker = MovePiece(move);
-    int scores[128], depth = 0;
-    int side_to_move = state->turn;
-    uint64_t attackers = ((cached->moves_rook[to] | cached->moves_bishop[to])
-                       & ~cached->directions[NW][LSB(cached->directions[NW][to] & state->occupied_both)]
-                       & ~cached->directions[NE][LSB(cached->directions[NE][to] & state->occupied_both)]
-                       & ~cached->directions[SE][MSB(cached->directions[SE][to] & state->occupied_both)]
-                       & ~cached->directions[SW][MSB(cached->directions[SW][to] & state->occupied_both)]
-                       & ~cached->directions[NORTH][LSB(cached->directions[NORTH][to] & state->occupied_both)]
-                       & ~cached->directions[EAST][LSB(cached->directions[EAST][to] & state->occupied_both)]
-                       & ~cached->directions[SOUTH][MSB(cached->directions[SOUTH][to] & state->occupied_both)]
-                       & ~cached->directions[WEST][MSB(cached->directions[WEST][to] & state->occupied_both)]) |
-                       (cached->moves_knight[to] & state->occupied_both) |
-                       (cached->moves_king[to] & state->occupied_both) |
-                       (cached->attacked_by_pawn[WHITE][from] & state->pieces[WHITE][PAWN]) |
-                       (cached->attacked_by_pawn[BLACK][from] & state->pieces[BLACK][PAWN]);
+    int *move, *end, *sortv, tmp, swapped;
+    static int sort_values[100];
 
-    scores[0] = eval_piece_values[MoveCapture(move)];
-    do
+    end = movebuf + count - 1;
+    for (move = movebuf, sortv = sort_values; move <= end; ++move, ++sortv)
     {
-        ++depth;
-        scores[depth] = eval_piece_values[attacker] - scores[depth - 1];
-    } while();
-
-    while (--depth)
-    {
-        scores[depth - 1] = -max(-scores[depth - 1], scores[depth]);
+        if (*move == hash_move)
+        {
+            *sortv = -1024 * 1024;
+        }
+        else
+        {
+            *sortv = search.history[*move & 0xfff];
+        }
     }
 
-    return scores[0];
+    do
+    {
+        swapped = 0;
+        for (move = movebuf, sortv = sort_values; move < end; ++move, ++sortv)
+        {
+            if (*sortv < *(sortv + 1))
+            {
+                tmp = *sortv;
+                *sortv = *(sortv + 1); 
+                *(sortv + 1) = tmp;
+                tmp = *move;
+                *move = *(move + 1); 
+                *(move + 1) = tmp;
+                swapped = 1;
+            }   
+        }
+    } while (swapped);
 }
-#endif

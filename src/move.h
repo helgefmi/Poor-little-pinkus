@@ -12,5 +12,6 @@ void move_generate_tactical(state_t*, int*, int*);
 
 int move_is_attacked(state_t*, int, int);
 void move_sort_captures(int*, int, int);
+void move_sort_moves(int*, int, int);
 
 #endif

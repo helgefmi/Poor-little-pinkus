@@ -157,38 +157,53 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
 
     *count = 0;
 
-    /* PAWN */
-    for (pieces = my_pieces[PAWN]; pieces; ClearLow(pieces))
+    /* PAWN PROMOTIONS */
+    pieces = my_pieces[PAWN] & cached->promote_from[state->turn];
+    for (; pieces; ClearLow(pieces))
     {
         from = LSB(pieces);
-        moves = (cached->moves_pawn_one[state->turn][from] & ~state->occupied_both & cached->promote[state->turn])
-                | (cached->attacks_pawn[state->turn][from] & state->occupied[Flip(state->turn)]);
+        moves = (cached->moves_pawn_one[state->turn][from] & ~state->occupied_both) |
+                (cached->attacks_pawn[state->turn][from] & target);
 
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
 
-            if (moves & -moves & cached->promote[state->turn])
-            {
-                *movebuf++ = PackMove(from, to, PAWN, state->square[to], QUEEN);
-                (*count)++;
-                *movebuf++ = PackMove(from, to, PAWN, state->square[to], ROOK);
-                (*count)++;
-                *movebuf++ = PackMove(from, to, PAWN, state->square[to], BISHOP);
-                (*count)++;
-                *movebuf++ = PackMove(from, to, PAWN, state->square[to], KNIGHT);
-                (*count)++;
-            }
-            else
-            {
-                *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
-                (*count)++;
-            }
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], QUEEN);
+            (*count)++;
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], ROOK);
+            (*count)++;
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], BISHOP);
+            (*count)++;
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], KNIGHT);
+            (*count)++;
         }
+    }
 
-        if (cached->attacks_pawn[state->turn][from] & state->en_passant)
+    /* PAWN ATTACKS */
+    pieces = my_pieces[PAWN] & ~cached->promote_from[state->turn];
+    for (; pieces; ClearLow(pieces))
+    {
+        from = LSB(pieces);
+        moves = cached->attacks_pawn[state->turn][from] & target;
+
+        for (; moves; ClearLow(moves))
         {
-            to = LSB(state->en_passant);
+            to = LSB(moves);
+
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
+            (*count)++;
+        }
+    }
+
+    /* EN PASSANT */
+    if (state->en_passant)
+    {
+        to = LSB(state->en_passant);
+        pieces = my_pieces[PAWN] & cached->attacked_by_pawn[state->turn][to];
+        for (; pieces; ClearLow(pieces))
+        {
+            from = LSB(pieces);
             *movebuf++ = PackMove(from, to, PAWN, PAWN, -1);
             (*count)++;
         }

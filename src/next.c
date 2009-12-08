@@ -36,10 +36,7 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
 #endif
             move_generate_tactical(state, movebuf, count);
 
-            if (*count < 2)
-                return 1;
-
-            if (depth > 1)
+            if (depth > 1 && *count > 1)
             {
                 hash_move = hash_get_move(state->zobrist);
                 move_sort_captures(movebuf, *count, hash_move);
@@ -81,8 +78,7 @@ int next_moves(state_t *state, int *movebuf, int *count, int ply, int depth)
 #ifdef USE_HISTORY
             if (depth > 1)
             {
-                hash_move = hash_get_move(state->zobrist);
-                move_sort_moves(movebuf, *count, hash_move);
+                move_sort_moves(movebuf, *count);
             }
 #endif
             return 1;

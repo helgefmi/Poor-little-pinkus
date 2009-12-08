@@ -138,35 +138,35 @@ void make_move(state_t *state, int move, int ply)
             break;
 
         case KING:
-            rook_mask = cached->castling_rookmask[state->turn][from][to];
+            if (Abs(from - to) == 2)
+            {
+                rook_mask = cached->castling_rookmask[state->turn][from][to];
 
-            state->pieces[state->turn][ROOK] ^= rook_mask;
-            state->occupied[state->turn] ^= rook_mask;
-            state->zobrist ^= hash_zobrist->rook_castling[state->turn][from][to];
+                state->pieces[state->turn][ROOK] ^= rook_mask;
+                state->occupied[state->turn] ^= rook_mask;
+                state->zobrist ^= hash_zobrist->rook_castling[state->turn][from][to];
+
+                for (;rook_mask; ClearLow(rook_mask))
+                {
+                    int tmp = LSB(rook_mask);
+                    state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+                }
+            }
 
             state->king_idx[state->turn] = to;
 
-            for (;rook_mask; ClearLow(rook_mask))
+
+            if (state->castling)
             {
-                int tmp = LSB(rook_mask);
-                state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
-            }
+                uint64_t castling = state->castling & cached->castling_by_color[state->turn];
+                state->castling ^= castling;
 
-            #if 0
-            /* These three lines are apparently slower than the branching/LSB thingie below ..*/
-            uint64_t castling = state->castling & cached->castling_by_color[state->turn];
-            state->castling ^= castling;
-            state->zobrist ^= hash_zobrist->state_castling[state->turn][castling >> (56 * state->turn)];
-            #endif
-
-            uint64_t castling = state->castling & cached->castling_by_color[state->turn];
-            state->castling ^= castling;
-
-            while (castling)
-            {
-                int castling_idx = LSB(castling);
-                castling &= castling - 1;
-                state->zobrist ^= hash_zobrist->castling[castling_idx];
+                while (castling)
+                {
+                    int castling_idx = LSB(castling);
+                    castling &= castling - 1;
+                    state->zobrist ^= hash_zobrist->castling[castling_idx];
+                }
             }
             break;
     }
@@ -248,14 +248,17 @@ void unmake_move(state_t *state, int move, int ply)
             break;
 
         case KING:
-            rook_mask = cached->castling_rookmask[state->turn][from][to];
-            state->pieces[state->turn][ROOK] ^= rook_mask;
-            state->occupied[state->turn] ^= rook_mask;
-
-            for (;rook_mask; ClearLow(rook_mask))
+            if (Abs(from - to) == 2)
             {
-                int tmp = LSB(rook_mask);
-                state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+                rook_mask = cached->castling_rookmask[state->turn][from][to];
+                state->pieces[state->turn][ROOK] ^= rook_mask;
+                state->occupied[state->turn] ^= rook_mask;
+
+                for (;rook_mask; ClearLow(rook_mask))
+                {
+                    int tmp = LSB(rook_mask);
+                    state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+                }
             }
 
             state->king_idx[state->turn] = from;

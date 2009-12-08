@@ -191,7 +191,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_HISTORY
                     /* Increment history */
-                    search.history[*move & 0xfff] += 1;
+                    if (MoveCapture(*move) > KING)
+                        search.history[*move & 0x7fff] += depth;
 #endif
 
 #ifdef USE_KILLERS
@@ -244,11 +245,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_TT
     hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
-#endif
-
-#ifdef USE_HISTORY
-    /* Increment history */
-    search.history[best_move & 0xfff] += 1;
 #endif
 
     return alpha;

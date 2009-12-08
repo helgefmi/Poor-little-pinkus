@@ -31,7 +31,7 @@ typedef struct
     int null_depth; /* for each null move, increment, when we come back, decrement */
 
 #ifdef USE_HISTORY
-    int history[64 * 64];
+    int history[1 << 15];
 #endif
 
 #ifdef USE_KILLERS

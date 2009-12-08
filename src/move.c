@@ -389,34 +389,19 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
     } while (swapped);
 }
 
-void move_sort_moves(int *movebuf, int count, int hash_move)
+void move_sort_moves(int *movebuf, int count)
 {
-    int *move, *end, *sortv, tmp, swapped;
-    static int sort_values[100];
+    int *move, *end, tmp, swapped;
 
     end = movebuf + count - 1;
-    for (move = movebuf, sortv = sort_values; move <= end; ++move, ++sortv)
-    {
-        if (*move == hash_move)
-        {
-            *sortv = -1024 * 1024;
-        }
-        else
-        {
-            *sortv = search.history[*move & 0xfff];
-        }
-    }
 
     do
     {
         swapped = 0;
-        for (move = movebuf, sortv = sort_values; move < end; ++move, ++sortv)
+        for (move = movebuf; move < end; ++move)
         {
-            if (*sortv < *(sortv + 1))
+            if (search.history[*move & 0x7fff] < search.history[*(move + 1) & 0x7fff])
             {
-                tmp = *sortv;
-                *sortv = *(sortv + 1); 
-                *(sortv + 1) = tmp;
                 tmp = *move;
                 *move = *(move + 1); 
                 *(move + 1) = tmp;

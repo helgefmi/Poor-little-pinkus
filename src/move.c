@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -350,7 +351,8 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
         }
         else
         {
-            *sortv = -MovePiece(*move);
+            assert(MovePromote(*move) >= KNIGHT && MovePromote(*move) <= QUEEN);
+            *sortv = 1024 * 1024;
         }
     }
 

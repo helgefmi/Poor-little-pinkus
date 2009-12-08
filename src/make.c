@@ -11,8 +11,8 @@ void make_null_move(state_t *state, int ply)
     state->zobrist ^= hash_zobrist->turn;
     if (state->en_passant)
     {
-        state->en_passant = 0;
         state->zobrist ^= hash_zobrist->en_passant[LSB(state->en_passant)];
+        state->en_passant = 0;
     }
 }
 

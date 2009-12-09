@@ -197,7 +197,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_KILLERS
                     /* Add killer */
-                    if (!search.null_depth && MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
+                    if (MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
                     {
                         search.killers[ply][1] = search.killers[ply][0];
                         search.killers[ply][0] = *move;
@@ -227,15 +227,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                     if (timecontrol.verbose)
                         timectrl_notify_uci();
                 }
-
-#ifdef USE_KILLERS
-                /* Killer */
-                if (!search.null_depth && MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
-                {
-                    search.killers[ply][1] = search.killers[ply][0];
-                    search.killers[ply][0] = best_move;
-                }
-#endif
             }
         }
     }
@@ -245,6 +236,18 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_TT
     hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);
+#endif
+
+#ifdef USE_KILLERS
+    if (best_move)
+    {
+        /* Killer */
+        if (MoveCapture(best_move) > KING && MovePromote(best_move) > KING && best_move != search.killers[ply][0])
+        {
+            search.killers[ply][1] = search.killers[ply][0];
+            search.killers[ply][0] = best_move;
+        }
+    }
 #endif
 
     return alpha;

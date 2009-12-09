@@ -1,1 +1,1 @@
-xboard -fcp './plp -mode uci' -fUCI -scp './plp -mode uci' -sUCI -mode TwoMachines -defaultHashSize 512 -size small -tc 40:00
+xboard -fcp './plp -mode uci' -fUCI -scp './plp -mode uci' -sUCI -mode TwoMachines -defaultHashSize 512 -size small -tc 2:00

@@ -28,7 +28,6 @@ typedef struct
     pv_t pv;
 
     int in_endgame;
-    int null_depth; /* for each null move, increment, when we come back, decrement */
 
 #ifdef USE_HISTORY
     uint64_t history[1 << 15];

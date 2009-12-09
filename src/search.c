@@ -104,7 +104,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Evaluate */
     if (!depth)
     {
-        if (!search.null_depth)
+        if (is_pv)
             pv->count = 0;
 
 #ifdef USE_QUIESCENCE
@@ -123,12 +123,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             R = 3;
 
         make_null_move(state, ply);
-        search.null_depth += 1;
 
         eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, NO_NULL, NULL, NOT_PV);
 
         unmake_null_move(state, ply);
-        search.null_depth -= 1;
 
         if (eval >= beta)
             return beta;
@@ -169,7 +167,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             else
             {
                 eval = -search_ab(state, depth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, &cur_pv, NOT_PV);
-
                 if (eval > alpha)
                     eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
             }
@@ -211,7 +208,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 alpha = eval;
                 hash_type = HASH_EXACT;
 
-                if (!search.null_depth)
+                if (is_pv)
                 {
                     memcpy(pv->moves + 1, cur_pv.moves, cur_pv.count * sizeof(int));
                     pv->moves[0] = *move;

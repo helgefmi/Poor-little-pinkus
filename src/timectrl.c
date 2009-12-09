@@ -27,8 +27,8 @@ void timectrl_go(state_t *state, int wtime, int btime, int ponder, int depth, ui
     {
         mytime /= 25;
         if (mytime < 1)
-            mytime = 2;
-        if (mytime > 5)
+            mytime = 1;
+        if (mytime > 15)
             mytime++;
         if (mytime > 30)
             mytime++;

@@ -4,6 +4,7 @@
 #include "state.h"
 #include "timectrl.h"
 #include "hash.h"
+#include "util.h"
 #include "search.h"
 
 #define NUM_BENCHES 8
@@ -64,9 +65,12 @@ void bench_start(int depth)
             qs_nodes / 1000000.0,
             (ab_nodes + qs_nodes) / spent_time);
 
-        printf("Cache hitrate: tt=%.2f eval=%.2f\n\n",
+        printf("Cache hitrate: tt=%.2f eval=%.2f\n",
             100 * (cache_hits / (cache_hits + cache_misses)),
             100 * (eval_cache_hits / (eval_cache_hits + eval_cache_misses)));
+        
+        util_print_pv();
+        printf("\n\n");
 
         fflush(stdout);
     }

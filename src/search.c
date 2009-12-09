@@ -55,7 +55,7 @@ void search_iterative(state_t *state, int max_depth)
             break;
 
         /* Since we're using Iterative Deepening, a mate result will always be the fastest mate. */
-        if (Abs(search.best_score) >= INF - MAX_DEPTH)
+        if (Abs(search.best_score) >= MATE - MAX_DEPTH)
             break;
     }
 }
@@ -71,6 +71,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int score = 0;
     int raised_alpha = 0;
     int eval;
+    int can_prune = 0;
     int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
     pv_t cur_pv;
 
@@ -83,8 +84,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_REPETITION
     /* Repetition */
-    if (state_is_repeating(state))
-        return alpha;
+    if (ply > 0 && state_is_repeating(state))
+        return 0;
 #endif
 
     /* Hash probe */
@@ -133,6 +134,17 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     }
 #endif
 
+    /* Pruning */
+    static int max_pruning_depth = 4;
+    static int prune_margins[5] = {0, 100, 150, 200, 300};
+    if ((depth <= max_pruning_depth) &&
+        !in_check &&
+        (Abs(alpha) < (MATE - MAX_DEPTH)) &&
+        (eval_quick(state) + prune_margins[depth]) <= alpha)
+    {
+        can_prune = 1;
+    }
+
     /* Move generation */
     hash_type = HASH_ALPHA;
 
@@ -153,6 +165,16 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             /* Legal position ? */
             if (move_is_attacked(state, state->king_idx[Flip(state->turn)], state->turn))
+            {
+                unmake_move(state, *move, ply);
+                continue;
+            }
+
+            /* Pruning */
+            if (can_prune &&
+                legal_move &&
+                (search.move_phase[ply] == PHASE_MOVES) &&
+                !move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn)))
             {
                 unmake_move(state, *move, ply);
                 continue;

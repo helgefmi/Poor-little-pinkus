@@ -18,6 +18,7 @@ void util_move_to_lan(int, char*);
 int util_legal_killer(state_t*, int);
 
 char *util_trim_str(char*);
+uint64_t util_attacks_to(state_t *, int);
 
 void util_print_pv();
 

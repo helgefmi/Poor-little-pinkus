@@ -4,6 +4,7 @@
 #include "hash.h"
 
 int eval_piece_values[6] = {100, 300, 310, 500, 900, 0};
+int eval_real_pvalues[6] = {100, 300, 300, 500, 900, 44444};
 
 static int pawn_pcsq[2][64] = {
      {0,   0,   0,   0,   0,   0,   0,   0,
@@ -269,10 +270,13 @@ int eval_state(state_t *state)
             ret += eval_kings(state, WHITE) - eval_kings(state, BLACK);
         }
 
+        if (state->turn != WHITE)
+            ret = -ret;
+
 #ifdef USE_HASH_EVAL
         hash_add_eval(state->zobrist, ret);
     }
 #endif
 
-    return state->turn == WHITE ? ret : -ret;
+    return ret;
 }

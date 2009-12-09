@@ -1,3 +1,4 @@
+#include "state.h"
 #include "search.h"
 #include "quiescence.h"
 #include "eval.h"
@@ -52,6 +53,10 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
 
     for (move = moves, end = moves + count; move < end; ++move)
     {
+        if ((eval_real_pvalues[MovePiece(*move)] > eval_real_pvalues[MoveCapture(*move)]) &&
+            (state_see(state, *move) < 0))
+            continue;
+
         make_move(state, *move, ply);
 
         if (move_is_attacked(state, state->king_idx[Flip(state->turn)], state->turn))

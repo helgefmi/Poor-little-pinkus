@@ -296,50 +296,56 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     }
 }
 
-int move_is_attacked(state_t *state, int square_idx, int attacker)
+int move_is_attacked(state_t *state, int square, int attacker)
 {
     /* Checks if a set of squares are currently attacked by an attackers pieces */
 
-    if ((state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square_idx]) |
-        (state->pieces[attacker][KNIGHT] & cached->moves_knight[square_idx]) |
-        (state->pieces[attacker][KING] & cached->moves_king[square_idx]))
+    if ((state->pieces[attacker][PAWN] & cached->attacked_by_pawn[attacker][square]) |
+        (state->pieces[attacker][KNIGHT] & cached->moves_knight[square]) |
+        (state->pieces[attacker][KING] & cached->moves_king[square]))
         return 1;
 
     uint64_t bishop_and_queen = state->pieces[attacker][BISHOP] | state->pieces[attacker][QUEEN];
 
-    uint64_t nw_hits = state->occupied_both & cached->directions[NW][square_idx];
-    if ((nw_hits & -nw_hits) & bishop_and_queen)
-        return 1;
+    if (cached->moves_bishop[square] & bishop_and_queen)
+    {
+        uint64_t nw_hits = state->occupied_both & cached->directions[NW][square];
+        if ((nw_hits & -nw_hits) & bishop_and_queen)
+            return 1;
 
-    uint64_t ne_hits = state->occupied_both & cached->directions[NE][square_idx];
-    if ((ne_hits & -ne_hits) & bishop_and_queen)
-        return 1;
+        uint64_t ne_hits = state->occupied_both & cached->directions[NE][square];
+        if ((ne_hits & -ne_hits) & bishop_and_queen)
+            return 1;
 
-    uint64_t sw_hits = state->occupied_both & cached->directions[SW][square_idx];
-    if (sw_hits && ((1ull << MSB(sw_hits)) & bishop_and_queen))
-        return 1;
+        uint64_t sw_hits = state->occupied_both & cached->directions[SW][square];
+        if (sw_hits && ((1ull << MSB(sw_hits)) & bishop_and_queen))
+            return 1;
 
-    uint64_t se_hits = state->occupied_both & cached->directions[SE][square_idx];
-    if (se_hits && ((1ull << MSB(se_hits)) & bishop_and_queen))
-        return 1;
+        uint64_t se_hits = state->occupied_both & cached->directions[SE][square];
+        if (se_hits && ((1ull << MSB(se_hits)) & bishop_and_queen))
+            return 1;
+    }
 
     uint64_t rook_and_queen = state->pieces[attacker][ROOK] | state->pieces[attacker][QUEEN];
 
-    uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square_idx];
-    if ((north_hits & -north_hits) & rook_and_queen)
-        return 1;
+    if (cached->moves_rook[square] & rook_and_queen)
+    {
+        uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square];
+        if ((north_hits & -north_hits) & rook_and_queen)
+            return 1;
 
-    uint64_t east_hits = state->occupied_both & cached->directions[EAST][square_idx];
-    if ((east_hits & -east_hits) & rook_and_queen)
-        return 1;
+        uint64_t east_hits = state->occupied_both & cached->directions[EAST][square];
+        if ((east_hits & -east_hits) & rook_and_queen)
+            return 1;
 
-    uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square_idx];
-    if (south_hits && ((1ull << MSB(south_hits)) & rook_and_queen))
-        return 1;
+        uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square];
+        if (south_hits && ((1ull << MSB(south_hits)) & rook_and_queen))
+            return 1;
 
-    uint64_t west_hits = state->occupied_both & cached->directions[WEST][square_idx];
-    if (west_hits && ((1ull << MSB(west_hits)) & rook_and_queen))
-        return 1;
+        uint64_t west_hits = state->occupied_both & cached->directions[WEST][square];
+        if (west_hits && ((1ull << MSB(west_hits)) & rook_and_queen))
+            return 1;
+    }
 
     return 0;
 }

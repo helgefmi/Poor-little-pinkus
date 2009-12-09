@@ -28,4 +28,6 @@ void state_print(state_t*);
 
 int state_is_repeating(state_t*);
 
+int state_see(state_t*, int);
+
 #endif

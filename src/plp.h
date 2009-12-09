@@ -59,6 +59,8 @@ extern int plp_mode;
 #define ClearLow(x) ((x) &= (x) - 1)
 #define Flip(x) ((x)^1)
 #define Abs(x) ((x) >= 0 ? (x) : -(x))
+#define Max(a, b) ((a) > (b) ? (a) : (b))
+#define Min(a, b) ((a) < (b) ? (a) : (b))
 
 /* Headers for optimized versions of LSB, MSB and PopCnt */
 #if defined(__LP64__)

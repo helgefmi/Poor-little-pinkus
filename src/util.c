@@ -206,3 +206,52 @@ void util_print_pv()
 
     fflush(stdout);
 }
+
+uint64_t util_attacks_to(state_t *state, int square)
+{
+    uint64_t ret =
+        (state->pieces[WHITE][PAWN] & cached->attacked_by_pawn[WHITE][square]) |
+        (state->pieces[BLACK][PAWN] & cached->attacked_by_pawn[BLACK][square]) |
+        ((state->pieces[WHITE][KNIGHT] | state->pieces[BLACK][KNIGHT]) & cached->moves_knight[square]) |
+        ((state->pieces[WHITE][KING] | state->pieces[BLACK][KING]) & cached->moves_king[square]);
+
+    uint64_t bishop_and_queen =
+        state->pieces[WHITE][BISHOP] | state->pieces[WHITE][QUEEN] |
+        state->pieces[BLACK][BISHOP] | state->pieces[BLACK][QUEEN];
+
+    if (cached->moves_bishop[square] & bishop_and_queen)
+    {
+        uint64_t nw_hits = state->occupied_both & cached->directions[NW][square];
+        uint64_t ne_hits = state->occupied_both & cached->directions[NE][square];
+        uint64_t sw_hits = state->occupied_both & cached->directions[SW][square];
+        uint64_t se_hits = state->occupied_both & cached->directions[SE][square];
+
+        ret |=
+            bishop_and_queen &
+            ((ne_hits & -ne_hits) |
+            (nw_hits & -nw_hits) |
+            (sw_hits ? 1ull << MSB(sw_hits) : 0) |
+            (se_hits ? 1ull << MSB(se_hits) : 0));
+    }
+
+    uint64_t rook_and_queen =
+        state->pieces[WHITE][ROOK] | state->pieces[WHITE][QUEEN] |
+        state->pieces[BLACK][ROOK] | state->pieces[BLACK][QUEEN];
+
+    if (cached->moves_rook[square] & rook_and_queen)
+    {
+        uint64_t north_hits = state->occupied_both & cached->directions[NORTH][square];
+        uint64_t east_hits = state->occupied_both & cached->directions[EAST][square];
+        uint64_t south_hits = state->occupied_both & cached->directions[SOUTH][square];
+        uint64_t west_hits = state->occupied_both & cached->directions[WEST][square];
+
+        ret |=
+            rook_and_queen &
+            ((north_hits & -north_hits) |
+            (east_hits & -east_hits) |
+            (south_hits ? 1ull << MSB(south_hits) : 0) |
+            (west_hits ? 1ull << MSB(west_hits) : 0));
+    }
+
+    return ret;
+}

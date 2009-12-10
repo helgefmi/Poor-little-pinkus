@@ -135,7 +135,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 #endif
 
     /* Pruning */
-    static int prune_margins[] = {0, 125, 125, 300, 300};
+    static int prune_margins[] = {0, 150, 175, 250, 300};
     if (depth < 5 &&
         !in_check &&
         eval_quick(state) + prune_margins[depth] <= alpha)

@@ -1,3 +1,4 @@
+#include <string.h>
 #include "eval.h"
 #include "plp.h"
 #include "state.h"
@@ -145,16 +146,29 @@ static int king_pcsq_eg[2][64] = {
       0,  10,  20,  30,  30,  20,  10,   0}
 };
 
+static int dpawn_penalties[8] = {0, 0, 60, 120, 160, 200, 200, 200};
+
 static int eval_pawns(state_t *state, int color)
 {
     register uint64_t pawns = state->pieces[color][PAWN];
     register int ret = 0;
+    register int i;
+    int pawns_per_file[8];
+
+    memset(pawns_per_file, 0, 8 * sizeof(int));
 
     for (; pawns; ClearLow(pawns))
     {
         int from = LSB(pawns);
+        pawns_per_file[from & 7] += 1;
         ret += pawn_pcsq[color][from];
     }
+
+    for (i = 0; i < 8; ++i)
+    {
+        ret -= dpawn_penalties[pawns_per_file[i]];
+    }
+
 
     return ret;
 }

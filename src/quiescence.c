@@ -13,7 +13,7 @@
 int quiescence(state_t *state, int ply, int alpha, int beta)
 {
     int *move, *end, eval;
-    int moves[100], count, test;
+    int moves[64], count, test;
 
     if (timectrl_should_halt())
         return 0;

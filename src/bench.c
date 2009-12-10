@@ -68,6 +68,7 @@ void bench_start(int depth)
         printf("Cache hitrate: tt=%.2f eval=%.2f\n",
             100 * (cache_hits / (cache_hits + cache_misses)),
             100 * (eval_cache_hits / (eval_cache_hits + eval_cache_misses)));
+        printf("Pruned nodes: %d\n", search.pruned_nodes);
         
         util_print_pv();
         printf("\n\n");

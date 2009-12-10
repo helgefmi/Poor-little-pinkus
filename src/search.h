@@ -24,10 +24,9 @@ typedef struct
     uint64_t qs_visited_nodes;
     int cache_hits, cache_misses;
     int eval_cache_hits, eval_cache_misses;
+    int pruned_nodes;
 
     pv_t pv;
-
-    int in_endgame;
 
 #ifdef USE_HISTORY
     uint64_t history[1 << 15];

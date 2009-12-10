@@ -103,7 +103,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 #endif
 
     /* Evaluate */
-    if (!depth)
+    if (depth <= 0)
     {
         if (is_pv)
             pv->count = 0;
@@ -117,10 +117,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_NULL
     /* Null move */
-    if (can_null && depth > 2 && !search.in_endgame && !in_check)
+    if (can_null && depth > 2 && !in_check)
     {
         int R = 2;
-        if (depth > 6)
+        if (depth > 5)
             R = 3;
 
         make_null_move(state, ply);
@@ -135,12 +135,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 #endif
 
     /* Pruning */
-    static int max_pruning_depth = 4;
-    static int prune_margins[5] = {0, 100, 150, 200, 300};
-    if ((depth <= max_pruning_depth) &&
+    static int prune_margins[] = {0, 125, 125, 300, 300};
+    if (depth < 5 &&
         !in_check &&
-        (Abs(alpha) < (MATE - MAX_DEPTH)) &&
-        (eval_quick(state) + prune_margins[depth]) <= alpha)
+        eval_quick(state) + prune_margins[depth] <= alpha)
     {
         can_prune = 1;
     }
@@ -173,9 +171,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             /* Pruning */
             if (can_prune &&
                 legal_move &&
-                (search.move_phase[ply] == PHASE_MOVES) &&
+                search.move_phase[ply] == PHASE_END &&
                 !move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn)))
             {
+                search.pruned_nodes += 1;
                 unmake_move(state, *move, ply);
                 continue;
             }

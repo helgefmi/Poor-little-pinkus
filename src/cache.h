@@ -31,6 +31,7 @@ typedef struct
     /* We use "directions" to calculate these as well */
             moves_bishop[64],
             moves_rook[64],
+            moves_queen[64],
 
     /* Used to efficiently find out if castling is available */
             castling_rooksq[2][2],

@@ -203,6 +203,8 @@ void cache_init()
                 cached->n_directions[i][idx] = ~cached->directions[i][idx];
             }
 
+            cached->moves_queen[idx] = cached->moves_rook[idx] | cached->moves_bishop[idx];
+
             int king_arr[8][2] = {
                 {1, 0}, {1, 1}, {0, 1}, {-1, 1},
                 {-1, 0}, {-1, -1}, {0, -1}, {1, -1}

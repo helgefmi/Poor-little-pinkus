@@ -48,7 +48,7 @@ int quiescence(state_t *state, int ply, int alpha, int beta)
     move_generate_tactical(state, moves, &count);
     if (count > 1)
     {
-        move_sort_captures(moves, count, 0);
+        move_sort_captures(moves, count, hash_get_move(state->zobrist));
     }
 
     for (move = moves, end = moves + count; move < end; ++move)

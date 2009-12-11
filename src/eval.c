@@ -146,7 +146,7 @@ static int king_pcsq_eg[2][64] = {
       0,  10,  20,  30,  30,  20,  10,   0}
 };
 
-static int dpawn_penalties[8] = {0, 0, 60, 120, 160, 200, 200, 200};
+static int dpawn_penalties[8] = {0, 0, 40, 90, 160, 200, 200, 200};
 
 static int eval_pawns(state_t *state, int color)
 {

@@ -25,7 +25,10 @@ search_data_t search;
 void search_go(state_t *state, int max_depth)
 {
     assert(max_depth > 0);
+
     memset(&search, 0, sizeof(search_data_t));
+    search.in_check[0] = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
+
     search_iterative(state, max_depth);
 }
 
@@ -72,7 +75,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int raised_alpha = 0;
     int eval;
     int can_prune = 0;
-    int in_check = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
     pv_t cur_pv;
 
     cur_pv.count = 0;
@@ -90,7 +92,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
     /* Hash probe */
 #ifdef USE_TT
-    if (ply > 0 && (hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
+    if ((hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
         return score;
     }
@@ -98,7 +100,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
     /* Check extension */
 #ifdef USE_CHECK_EXTENSION
-    if (in_check)
+    if (search.in_check[ply])
         depth += 1;
 #endif
 
@@ -117,7 +119,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_NULL
     /* Null move */
-    if (can_null && depth > 2 && !in_check)
+    if (can_null && depth > 2 && !search.in_check[ply])
     {
         int R = 2;
         if (depth > 5)
@@ -125,6 +127,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
         make_null_move(state, ply);
 
+        search.in_check[ply + 1] = 0;
         eval = -search_ab(state, depth - 1 - R, ply + 1, -beta, -beta + 1, NO_NULL, NULL, NOT_PV);
 
         unmake_null_move(state, ply);
@@ -137,7 +140,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Pruning */
     static int prune_margins[] = {0, 150, 175, 250, 300};
     if (depth < 5 &&
-        !in_check &&
+        !search.in_check[ply] &&
         eval_quick(state) + prune_margins[depth] <= alpha)
     {
         can_prune = 1;
@@ -168,11 +171,13 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 continue;
             }
 
+            search.in_check[ply + 1] = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
+
             /* Pruning */
             if (can_prune &&
                 legal_move &&
                 search.move_phase[ply] == PHASE_END &&
-                !move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn)))
+                !search.in_check[ply + 1])
             {
                 search.pruned_nodes += 1;
                 unmake_move(state, *move, ply);
@@ -187,7 +192,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             }
             else
             {
-                eval = -search_ab(state, depth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, &cur_pv, NOT_PV);
+                eval = -search_ab(state, depth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, 0, NOT_PV);
                 if (eval > alpha)
                     eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
             }
@@ -250,7 +255,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     }
 
     if (!legal_move)
-        alpha = in_check ? -MATE + ply : -10;
+        alpha = search.in_check[ply] ? -MATE + ply : -10;
 
 #ifdef USE_TT
     hash_add_node(state->zobrist, alpha, depth, hash_type, best_move);

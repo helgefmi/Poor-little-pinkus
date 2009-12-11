@@ -19,6 +19,7 @@ typedef struct
     int max_depth;
 
     int move_phase[MAX_DEPTH];
+    int in_check[MAX_DEPTH];
 
     uint64_t visited_nodes;
     uint64_t qs_visited_nodes;

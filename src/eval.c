@@ -300,7 +300,7 @@ int eval_quick(state_t *state)
     int ret;
 
 #ifdef USE_HASH_EVAL
-    if (!hash_get_eval(state->zobrist, &ret))
+    if (hash_get_eval(state->zobrist, &ret))
         return ret;
 #endif
 

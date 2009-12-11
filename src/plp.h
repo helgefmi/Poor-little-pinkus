@@ -10,6 +10,8 @@
 
 extern int plp_mode;
 
+#define ASPIRATION 50
+
 #define USE_HASH_EVAL
 #define USE_KILLERS
 #define USE_NULL
@@ -20,6 +22,7 @@ extern int plp_mode;
 #define USE_TT
 #define USE_ASPIRATION
 #define USE_HISTORY
+#define USE_PRUNING
 
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 

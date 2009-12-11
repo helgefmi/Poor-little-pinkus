@@ -400,6 +400,7 @@ void move_sort_captures(int *movebuf, int count, int hash_move)
     } while (swapped);
 }
 
+#ifdef USE_HISTORY
 void move_sort_moves(int *movebuf, int count)
 {
     int *move, *end, tmp, swapped;
@@ -421,3 +422,4 @@ void move_sort_moves(int *movebuf, int count)
         }
     } while (swapped);
 }
+#endif

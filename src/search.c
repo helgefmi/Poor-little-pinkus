@@ -13,8 +13,6 @@
 #include "make.h"
 #include "timectrl.h"
 
-#define ASPIRATION 50
-
 #define NOT_PV 0
 #define IS_PV 1
 #define NO_NULL 0
@@ -122,7 +120,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     if (can_null && depth > 2 && !search.in_check[ply])
     {
         int R = 2;
-        if (depth > 5)
+        if (depth > 6)
             R = 3;
 
         make_null_move(state, ply);
@@ -138,13 +136,15 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 #endif
 
     /* Pruning */
-    static int prune_margins[] = {0, 150, 175, 250, 300};
-    if (depth < 5 &&
+#ifdef USE_PRUNING
+    static int prune_margins[] = {0, 150, 200, 400};
+    if (depth < 4 &&
         !search.in_check[ply] &&
         eval_quick(state) + prune_margins[depth] <= alpha)
     {
         can_prune = 1;
     }
+#endif
 
     /* Move generation */
     hash_type = HASH_ALPHA;
@@ -173,6 +173,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             search.in_check[ply + 1] = move_is_attacked(state, state->king_idx[state->turn], Flip(state->turn));
 
+#ifdef USE_PRUNING
             /* Pruning */
             if (can_prune &&
                 legal_move &&
@@ -183,6 +184,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 unmake_move(state, *move, ply);
                 continue;
             }
+#endif
 
             legal_move = 1;
 

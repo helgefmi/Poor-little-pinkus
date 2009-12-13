@@ -32,22 +32,9 @@ void search_go(state_t *state, int max_depth)
 
 void search_iterative(state_t *state, int max_depth)
 {
-    int eval, last_eval;
-
-    search.max_depth = 2;
-    last_eval = search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
-
-    for (search.max_depth = 3; search.max_depth <= max_depth; ++search.max_depth)
+    for (search.max_depth = 2; search.max_depth <= max_depth; ++search.max_depth)
     {
-#ifdef USE_ASPIRATION
-        /* Aspiration */
-        eval = search_ab(state, search.max_depth, 0, last_eval - ASPIRATION, last_eval + ASPIRATION, NO_NULL, &search.pv, IS_PV);
-
-        if (eval <= last_eval - ASPIRATION || eval >= last_eval + ASPIRATION)
-#endif
-            eval = search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
-
-        last_eval = eval;
+        search_ab(state, search.max_depth, 0, -INF, INF, NO_NULL, &search.pv, IS_PV);
 
         if (timecontrol.verbose)
             timectrl_notify_uci(state);

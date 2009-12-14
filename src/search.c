@@ -83,12 +83,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     }
 #endif
 
-    /* Check extension */
-#ifdef USE_CHECK_EXTENSION
-    if (search.in_check[ply])
-        depth += 1;
-#endif
-
     /* Evaluate */
     if (depth <= 0)
     {
@@ -151,6 +145,9 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
         for (move = moves, end = moves + count; move < end; ++move)
         {
+            int extensions = 0;
+            int sdepth;
+
             make_move(state, *move, ply);
 
             /* Legal position ? */
@@ -177,15 +174,23 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             legal_moves += 1;
 
+            /* Check extension */
+#ifdef USE_CHECK_EXTENSION
+            if (search.in_check[ply + 1])
+                extensions += 1;
+#endif
+            
+            sdepth = depth + extensions;
+
             if (depth < 3 || !is_pv || !raised_alpha)
             {
-                eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
+                eval = -search_ab(state, sdepth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
             }
             else
             {
-                eval = -search_ab(state, depth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, 0, NOT_PV);
+                eval = -search_ab(state, sdepth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, 0, NOT_PV);
                 if (eval > alpha)
-                    eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
+                    eval = -search_ab(state, sdepth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
             }
 
             unmake_move(state, *move, ply);

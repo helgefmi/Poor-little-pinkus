@@ -92,6 +92,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Evaluate */
     if (depth <= 0)
     {
+        --search.visited_nodes;
+
         if (is_pv)
             pv->count = 0;
 
@@ -175,7 +177,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             legal_moves += 1;
 
-            if (!is_pv || !raised_alpha)
+            if (depth < 3 || !is_pv || !raised_alpha)
             {
                 eval = -search_ab(state, depth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
             }

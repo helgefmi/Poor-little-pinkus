@@ -118,7 +118,7 @@ int timectrl_should_halt()
     {
         return 1;
     }
-    if (timecontrol.nodes && search.visited_nodes > timecontrol.nodes)
+    if (timecontrol.nodes && (search.visited_nodes + search.qs_visited_nodes) > timecontrol.nodes)
     {
         return 1;
     }
@@ -143,8 +143,8 @@ void timectrl_notify_uci()
     spent_time /= 1000000.0;
 
     printf("info nodes %llu nps %d depth %d cachehits %d cachemisses %d time %d",
-        search.visited_nodes,
-        (int)(search.visited_nodes / spent_time),
+        search.visited_nodes + search.qs_visited_nodes,
+        (int)((search.visited_nodes + search.qs_visited_nodes) / spent_time),
         search.max_depth,
         search.cache_hits,
         search.cache_misses,

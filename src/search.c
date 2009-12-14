@@ -52,7 +52,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 {
     int *move, *end;
     int count = 0;
-    int legal_move = 0;
+    int legal_moves = 0;
     int best_move = 0;
     int hash_type;
     int moves[100];
@@ -77,7 +77,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
     /* Hash probe */
 #ifdef USE_TT
-    if ((hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
+    if (ply > 0 && (hash_type = hash_probe(state->zobrist, depth, alpha, beta, &score)))
     {
         return score;
     }
@@ -163,7 +163,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 #ifdef USE_PRUNING
             /* Pruning */
             if (can_prune &&
-                legal_move &&
+                legal_moves &&
                 search.move_phase[ply] == PHASE_END &&
                 !search.in_check[ply + 1])
             {
@@ -173,7 +173,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
             }
 #endif
 
-            legal_move = 1;
+            legal_moves += 1;
 
             if (!is_pv || !raised_alpha)
             {
@@ -243,7 +243,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
         }
     }
 
-    if (!legal_move)
+    if (!legal_moves)
         alpha = search.in_check[ply] ? -MATE + ply : -10;
 
 #ifdef USE_TT

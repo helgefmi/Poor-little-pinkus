@@ -20,18 +20,18 @@ void print_usage()
 "plp - the horrific chess engine!\n\n"
 "plp takes the following arguments:\n"
 " -fen <fen>       - Sets up plp with an initial position.\n"
-"                    If omitted, the normal initial position in chess is used.\n"
+"                    If omitted, the normal startingposition in chess is used.\n"
 " -depth <n>       - Sets the depth of perft, divide or perftsuite modes.\n"
 " -tsize <n>       - Sets the hash table size (in MB).\n\n"
-" -mode divide     - Runs through every move in a position prints their\n"
+" -mode divide     - Runs through every move in a position and print their\n"
 "                    leaf-node counts.\n"
 " -mode perft      - Same as '-mode divide' but will only give one leaf-node\n"
 "                    count for the starting position, not for each move.\n"
 " -mode perftsuite - Runs through a set of 126 positions and compare the perft\n"
 "                    values by their correct values. Runs with arbitrary depth.\n"
-" -mode uci        - Starts the engine in uci mode.\n\n"
+" -mode uci        - Starts the engine in uci mode. This is the default behaviour.\n\n"
 " -mode bench      - Starts a benchmark for our main search algorithm.\n\n"
-" Anything else prints out this message.\n");
+"\n");
 }
 
 int main(int argc, char **argv)
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     char *fen = FEN_INIT;
     int depth = 0;
     int table_size = 512;
-    plp_mode = MODE_PRINT_USAGE;
+    plp_mode = MODE_UCI;
 
     int i;
     for (i = 1; i < argc; ++i)

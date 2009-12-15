@@ -174,8 +174,8 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
             legal_moves += 1;
 
-            /* Check extension */
 #ifdef USE_CHECK_EXTENSION
+            /* Check extension */
             if (search.in_check[ply + 1])
                 extensions += 1;
 #endif

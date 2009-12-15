@@ -23,6 +23,7 @@ extern int plp_mode;
 #define USE_ASPIRATION
 #define USE_HISTORY
 #define USE_PRUNING
+//#define USE_LMR
 
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 

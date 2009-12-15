@@ -57,9 +57,10 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     int hash_type;
     int moves[100];
     int score = 0;
-    int raised_alpha = 0;
+    int o_alpha = alpha;
     int eval;
-    int can_prune = 0;
+    int can_prune;
+    int extensions;
     pv_t cur_pv;
 
     cur_pv.count = 0;
@@ -121,12 +122,9 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     /* Pruning */
 #ifdef USE_PRUNING
     static int prune_margins[] = {0, 150, 200, 400};
-    if (depth < 4 &&
-        !search.in_check[ply] &&
-        eval_quick(state) + prune_margins[depth] <= alpha)
-    {
-        can_prune = 1;
-    }
+    can_prune = (depth < 4 &&
+                 !search.in_check[ply] &&
+                 eval_quick(state) + prune_margins[depth] <= alpha);
 #endif
 
     /* Move generation */
@@ -145,8 +143,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
         for (move = moves, end = moves + count; move < end; ++move)
         {
-            int extensions = 0;
-            int sdepth;
+            extensions = 0;
 
             make_move(state, *move, ply);
 
@@ -180,17 +177,15 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 extensions += 1;
 #endif
             
-            sdepth = depth + extensions;
-
-            if (depth < 3 || !is_pv || !raised_alpha)
+            if (depth < 3 || !is_pv || alpha == o_alpha)
             {
-                eval = -search_ab(state, sdepth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
+                eval = -search_ab(state, depth + extensions - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, is_pv);
             }
             else
             {
-                eval = -search_ab(state, sdepth - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, 0, NOT_PV);
+                eval = -search_ab(state, depth + extensions - 1, ply + 1, -alpha - 1, -alpha, CAN_NULL, 0, NOT_PV);
                 if (eval > alpha)
-                    eval = -search_ab(state, sdepth - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
+                    eval = -search_ab(state, depth + extensions - 1, ply + 1, -beta, -alpha, CAN_NULL, &cur_pv, IS_PV);
             }
 
             unmake_move(state, *move, ply);
@@ -216,7 +211,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
 
 #ifdef USE_KILLERS
                     /* Add killer */
-                    if (MoveCapture(*move) > KING && MovePromote(*move) > KING && *move != search.killers[ply][0])
+                    if (!IsCaptureOrPromote(*move) && *move != search.killers[ply][0])
                     {
                         search.killers[ply][1] = search.killers[ply][0];
                         search.killers[ply][0] = *move;
@@ -226,7 +221,6 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
                 }
 
                 /* PV node */
-                raised_alpha = 1;
                 alpha = eval;
                 hash_type = HASH_EXACT;
 
@@ -261,7 +255,7 @@ int search_ab(state_t *state, int depth, int ply, int alpha, int beta, int can_n
     if (best_move)
     {
         /* Killer */
-        if (MoveCapture(best_move) > KING && MovePromote(best_move) > KING && best_move != search.killers[ply][0])
+        if (!IsCaptureOrPromote(best_move) && best_move != search.killers[ply][0])
         {
             search.killers[ply][1] = search.killers[ply][0];
             search.killers[ply][0] = best_move;

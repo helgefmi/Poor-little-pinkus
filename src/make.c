@@ -55,7 +55,7 @@ void make_move(state_t *state, int move, int ply)
     state->pieces[state->turn][piece] &= ~from_square;
     state->occupied[state->turn] &= ~from_square;
     state->zobrist ^= hash_zobrist->pieces[state->turn][piece][from];
-    state->square[from] = -1;
+    state->square[from] = 7;
 
     /* Update the board with the new position of the piece. */
     if (promote < 6)
@@ -92,7 +92,7 @@ void make_move(state_t *state, int move, int ply)
             to_remove_square = cached->moves_pawn_one[opponent][to];
             to_remove_square_idx = LSB(to_remove_square);
 
-            state->square[to_remove_square_idx] = -1;
+            state->square[to_remove_square_idx] = 7;
         }
 
         /* Remove the captured piece off the board. */
@@ -149,7 +149,7 @@ void make_move(state_t *state, int move, int ply)
                 for (;rook_mask; ClearLow(rook_mask))
                 {
                     int tmp = LSB(rook_mask);
-                    state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+                    state->square[tmp] = (state->square[tmp] == 7 ? ROOK : 7);
                 }
             }
 
@@ -211,7 +211,7 @@ void unmake_move(state_t *state, int move, int ply)
     state->square[from] = piece;
 
     state->occupied[state->turn] ^= to_square;
-    state->square[to] = -1;
+    state->square[to] = 7;
 
     if (promote < 6)
     {
@@ -257,7 +257,7 @@ void unmake_move(state_t *state, int move, int ply)
                 for (;rook_mask; ClearLow(rook_mask))
                 {
                     int tmp = LSB(rook_mask);
-                    state->square[tmp] = (state->square[tmp] == -1 ? ROOK : -1);
+                    state->square[tmp] = (state->square[tmp] == 7 ? ROOK : 7);
                 }
             }
 

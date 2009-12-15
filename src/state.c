@@ -24,7 +24,7 @@ int state_init_from_fen(state_t *state, char *fen)
     int res;
 
     memset(state, 0, sizeof(state_t));
-    memset(state->square, -1, 64 * sizeof(int));
+    memset(state->square, 7, 64 * sizeof(int));
 
     /* Set up the position. */
     while (fen[i] && fen[i] != ' ')

@@ -26,7 +26,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
             !move_is_attacked(state, cached->OOsq[state->turn][1], Flip(state->turn)) &&
             !move_is_attacked(state, cached->OOsq[state->turn][2], Flip(state->turn)))
         {
-            *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOto[state->turn], KING, -1, -1);
+            *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOto[state->turn], KING, 7, 7);
             (*count)++;
         }
 
@@ -36,7 +36,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
             !move_is_attacked(state, cached->OOOsq[state->turn][1], Flip(state->turn)) &&
             !move_is_attacked(state, cached->OOOsq[state->turn][2], Flip(state->turn)))
         {
-            *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOOto[state->turn], KING, -1, -1);
+            *movebuf++ = PackMove(state->king_idx[state->turn], cached->OOOto[state->turn], KING, 7, 7);
             (*count)++;
         }
     }
@@ -50,7 +50,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, KNIGHT, -1, -1);
+            *movebuf++ = PackMove(from, to, KNIGHT, 7, 7);
             (*count)++;
         }
     }
@@ -69,7 +69,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, BISHOP, -1, -1);
+            *movebuf++ = PackMove(from, to, BISHOP, 7, 7);
             (*count)++;
         }
     }
@@ -88,7 +88,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, ROOK, -1, -1);
+            *movebuf++ = PackMove(from, to, ROOK, 7, 7);
             (*count)++;
         }
     }
@@ -111,7 +111,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, QUEEN, -1, -1);
+            *movebuf++ = PackMove(from, to, QUEEN, 7, 7);
             (*count)++;
         }
     }
@@ -130,7 +130,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
         {
             to = LSB(moves);
 
-            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], 7);
             (*count)++;
         }
     }
@@ -143,7 +143,7 @@ void move_generate_moves(state_t *state, int *movebuf, int *count)
     for (; moves; ClearLow(moves))
     {
         to = LSB(moves);
-        *movebuf++ = PackMove(from, to, KING, -1, -1);
+        *movebuf++ = PackMove(from, to, KING, 7, 7);
         (*count)++;
     }
 }
@@ -191,7 +191,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
         {
             to = LSB(moves);
 
-            *movebuf++ = PackMove(from, to, PAWN, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, PAWN, state->square[to], 7);
             (*count)++;
         }
     }
@@ -204,7 +204,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
         for (; pieces; ClearLow(pieces))
         {
             from = LSB(pieces);
-            *movebuf++ = PackMove(from, to, PAWN, PAWN, -1);
+            *movebuf++ = PackMove(from, to, PAWN, PAWN, 7);
             (*count)++;
         }
     }
@@ -218,7 +218,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
         for (; moves; ClearLow(moves))
         {
             to = LSB(moves);
-            *movebuf++ = PackMove(from, to, KNIGHT, state->square[to], -1);
+            *movebuf++ = PackMove(from, to, KNIGHT, state->square[to], 7);
             (*count)++;
         }
     }
@@ -239,7 +239,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
             for (; moves; ClearLow(moves))
             {
                 to = LSB(moves);
-                *movebuf++ = PackMove(from, to, BISHOP, state->square[to], -1);
+                *movebuf++ = PackMove(from, to, BISHOP, state->square[to], 7);
                 (*count)++;
             }
         }
@@ -261,7 +261,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
             for (; moves; ClearLow(moves))
             {
                 to = LSB(moves);
-                *movebuf++ = PackMove(from, to, ROOK, state->square[to], -1);
+                *movebuf++ = PackMove(from, to, ROOK, state->square[to], 7);
                 (*count)++;
             }
         }
@@ -287,7 +287,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
             for (; moves; ClearLow(moves))
             {
                 to = LSB(moves);
-                *movebuf++ = PackMove(from, to, QUEEN, state->square[to], -1);
+                *movebuf++ = PackMove(from, to, QUEEN, state->square[to], 7);
                 (*count)++;
             }
         }
@@ -300,7 +300,7 @@ void move_generate_tactical(state_t *state, int *movebuf, int *count)
     for (; moves; ClearLow(moves))
     {
         to = LSB(moves);
-        *movebuf++ = PackMove(from, to, KING, state->square[to], -1);
+        *movebuf++ = PackMove(from, to, KING, state->square[to], 7);
         (*count)++;
     }
 }

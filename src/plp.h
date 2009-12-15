@@ -54,11 +54,12 @@ extern int plp_mode;
 #define MovePiece(move)   ((move >> 12) & 7)
 #define MoveCapture(move) ((move >> 15) & 7)
 #define MovePromote(move) ((move >> 18) & 7)
+#define IsCaptureOrPromote(move) (((move >> 15)) != 63)
 
 #define Killer1(ply) search.killers[ply][0]
 #define Killer2(ply) search.killers[ply][1]
 
-#define PackMove(from, to, piece, capture, promote) (from | ((to & 63) << 6) | ((piece & 7) << 12) | ((capture & 7) << 15) | ((promote & 7) << 18))
+#define PackMove(from, to, piece, capture, promote) (from | (to << 6) | (piece << 12) | ((capture & 7) << 15) | ((promote & 7) << 18))
 
 #define ClearLow(x) ((x) &= (x) - 1)
 #define Flip(x) ((x)^1)

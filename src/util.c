@@ -33,7 +33,7 @@ int util_chars_to_move(char *move_str, state_t *state)
     to = util_chars_to_square(move_str);
     move_str += 2;
 
-    promote = -1;
+    promote = 7;
     if (move_str[0])
     {
         promote = util_char_to_piece(move_str[0]);
@@ -134,7 +134,7 @@ int util_legal_killer(state_t *state, int move)
     int piece = MovePiece(move);
 
     /* Killers can't be captures. This also checks for pawn bumping into a piece. */
-    if (state->square[to] != -1)
+    if (state->square[to] != 7)
         return 0;
 
     /* Is the piece still there? */
